@@ -38,23 +38,22 @@ namespace GooTrader
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-                try
-                {
-                    ib.ClientId = 0;
-                    ib.ClientSocket.eConnect("127.0.0.1", 7497, 0);
+            try
+            {
+                ib.ClientId = 0;
+                ib.ClientSocket.eConnect("127.0.0.1", 7497, 0);
 
-                    var reader = new EReader(ib.ClientSocket, signal);
+                // Start an IB reader thread
+                var reader = new EReader(ib.ClientSocket, signal);
+                reader.Start();
 
-                    reader.Start();
-
-                    new Thread(() => { while (ib.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
-                }
-                catch (Exception)
-                {
+                // background thread to process TWS messages
+                new Thread(() => { while (ib.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
+            }
+            catch (Exception)
+            {
                 throw new Exception();
-                }
-            c1.Name = c1.Name + "-*";
-            MessageLogger.LogMessage("Pinky!");
+            }
         }
     }
 }
