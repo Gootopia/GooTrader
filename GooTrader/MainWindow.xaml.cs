@@ -54,6 +54,7 @@ namespace GooTrader
                 throw new Exception();
                 }
             c1.Name = c1.Name + "-*";
+            MessageLogger.LogMessage("Pinky!");
         }
     }
 }

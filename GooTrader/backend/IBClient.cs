@@ -128,9 +128,6 @@ namespace GooTrader
         void EWrapper.error(Exception e)
         {
             var tmp = Error;
-            Application.Current.Dispatcher.BeginInvoke(
-  DispatcherPriority.Background,
-  new Action(() => MessageLogger.LogMessage(e.Message)));
             if (tmp != null)
                 tmp(0, 0, null, e);
         }
@@ -138,9 +135,6 @@ namespace GooTrader
         void EWrapper.error(string str)
         {
             var tmp = Error;
-            Application.Current.Dispatcher.BeginInvoke(
-DispatcherPriority.Background,
-new Action(() => MessageLogger.LogMessage(str)));
 
             if (tmp != null)
                 tmp(0, 0, str, null);
@@ -149,9 +143,8 @@ new Action(() => MessageLogger.LogMessage(str)));
         void EWrapper.error(int id, int errorCode, string errorMsg)
         {
             var tmp = Error;
-            Application.Current.Dispatcher.BeginInvoke(
-DispatcherPriority.Background,
-new Action(() => MessageLogger.LogMessage(String.Format("Error {0}:{1}",errorCode.ToString(),errorMsg))));
+
+            MessageLogger.LogMessage(errorMsg);
             if (tmp != null)
                 tmp(id, errorCode, errorMsg, null);
         }
@@ -162,6 +155,7 @@ new Action(() => MessageLogger.LogMessage(String.Format("Error {0}:{1}",errorCod
         {
             var tmp = ConnectionClosed;
 
+            MessageLogger.LogMessage("CONNECTION CLOSED!");
             if (tmp != null)
                 tmp();
         }

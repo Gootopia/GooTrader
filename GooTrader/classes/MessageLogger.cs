@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace GooTrader
 {
@@ -36,7 +38,11 @@ namespace GooTrader
         {
             var newLogEntry = new LogMessage(msg, type);
             if (messages == null) throw new NullReferenceException();
-            messages.Insert(0, newLogEntry);
+
+            // This insures that messages originating outside the UI thread (i.e: IB Reader thread) can call without error.
+            // Not sure if this causes a performance hit. Might have to revisit a better way.
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                        new Action(() => messages.Insert(0, newLogEntry)));
         }
 
         #endregion
