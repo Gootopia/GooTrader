@@ -6,21 +6,21 @@
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
         xmlns:local="clr-namespace:GooTrader"
         mc:Ignorable="d"
-        Title="GooTrader" Height="450" Width="800" HorizontalAlignment="Center" VerticalAlignment="Center" SizeToContent="Height" WindowStartupLocation="CenterScreen">
-    <StackPanel>
+        Title="GooTrader" HorizontalAlignment="Center" VerticalAlignment="Center" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" WindowState="Maximized">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
-            <GroupBox Header="Log" Grid.Row="0">
+            <GroupBox Header="Log" Grid.Row="2">
                 <DataGrid x:Name="viewLog" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#FF14F9E4">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Time" Binding="{Binding Path=Item1}"></DataGridTextColumn>
-                        <DataGridTextColumn Header="Message" Binding="{Binding Path=Item2}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Time" Binding="{Binding Path=Time}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Type" Binding="{Binding Path=Type}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Message" Binding="{Binding Path=Message}"></DataGridTextColumn>
                     </DataGrid.Columns>
-                 </DataGrid>
+                </DataGrid>
             </GroupBox>
             <GroupBox Header="Contracts" Grid.Row="1">
                 <DataGrid x:Name="viewContracts" ItemsSource="{Binding}" AutoGenerateColumns="False" AlternatingRowBackground="#FF63E8F5" AllowDrop="True" IsReadOnly="True">
@@ -30,9 +30,8 @@
                 </DataGrid>
             </GroupBox>
             <!-- User Control-->
-            <StackPanel Grid.Row="2" Orientation="Horizontal">
-                    <Button x:Name="btnConnect" Content="Connect" HorizontalAlignment="Left" Margin="355,184,0,0" VerticalAlignment="Top" Width="75" Click="btnConnect_Click"/>
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Button x:Name="btnConnect" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Click="btnConnect_Click"/>
             </StackPanel>
         </Grid>
-    </StackPanel>
 </Window>

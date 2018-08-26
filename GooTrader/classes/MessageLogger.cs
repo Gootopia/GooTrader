@@ -1,52 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GooTrader
 {
+    public enum LogMessageType { IB, ORDER, INFO };
+
+    public class LogMessage
+    {
+        public string Time { get; set; }
+        public LogMessageType Type{ get; set; }
+        public string Message { get; set; }
+
+        public LogMessage(string msg, LogMessageType type)
+        {
+            Time = DateTime.Now.ToLongTimeString();
+            Type = type;
+            Message = msg;
+        }
+    }
+
     /// <summary>
     /// Message Logger
     /// Used to log events with a timestamp
     /// </summary>
-    public class MessageLogger : ObservableCollection<Tuple<String,String>>
+    public class MessageLogger : ObservableCollection<LogMessage>
     {
-        // Constructor
-        public MessageLogger()
-        {
-            this.Add(new Tuple<string, string>("Time1", "Message1"));
-            this.Add(new Tuple<string, string>("Time2", "Message2"));
-        }
-
-        #region private Methods
-        private string _getCurrentTime()
-        {
-            return "00:00:00";
-        }
-        #endregion
-
         #region public Methods
         /// <summary>
         /// LogMessage(string msg)
         /// Timestamps a message with the current time and inserts it at the head of the message log
         /// </summary>
         /// <param name="msg"></param>
-        public void LogMessage(string msg)
+        public void LogMessage(string msg, LogMessageType type = LogMessageType.INFO)
         {
-            var newLogEntry = Tuple.Create<string, string>(_getCurrentTime(), msg);
+            var newLogEntry = new LogMessage(msg, type);
             this.Insert(0, newLogEntry);
         }
 
-        /// <summary>
-        /// ClearLog()
-        /// Empties the message log
-        /// </summary>
-        public void ClearLog()
-        {
-
-        }
         #endregion
     }
 }
