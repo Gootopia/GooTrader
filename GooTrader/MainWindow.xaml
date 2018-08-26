@@ -6,15 +6,18 @@
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
         xmlns:local="clr-namespace:GooTrader"
         mc:Ignorable="d"
-        Title="GooTrader" HorizontalAlignment="Center" VerticalAlignment="Center" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize" WindowState="Maximized">
+        x:Name="main"
+        Title="GooTrader" HorizontalAlignment="Center" VerticalAlignment="Center" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+    <!-- NOTE: Refer to ViewModel class for available binding objects. DON'T BIND TO STUFF OUTSIDE THIS CLASS!!!!-->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
+            <!--Message Logger-->
             <GroupBox Header="Log" Grid.Row="2">
-                <DataGrid x:Name="viewLog" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#FF14F9E4">
+                <DataGrid x:Name="viewLog" ItemsSource ="{Binding messages}" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#FF14F9E4">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Time" Binding="{Binding Path=Time}"></DataGridTextColumn>
                         <DataGridTextColumn Header="Type" Binding="{Binding Path=Type}"></DataGridTextColumn>
@@ -22,8 +25,9 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </GroupBox>
+            <!-- Contracts-->
             <GroupBox Header="Contracts" Grid.Row="1">
-                <DataGrid x:Name="viewContracts" ItemsSource="{Binding}" AutoGenerateColumns="False" AlternatingRowBackground="#FF63E8F5" AllowDrop="True" IsReadOnly="True">
+                <DataGrid x:Name="viewContracts" ItemsSource="{Binding contracts}" AutoGenerateColumns="False" AlternatingRowBackground="#FF63E8F5" AllowDrop="True" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="MyName" Binding="{Binding Name}"></DataGridTextColumn>
                     </DataGrid.Columns>

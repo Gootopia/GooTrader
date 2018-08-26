@@ -1,13 +1,15 @@
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.exe.config
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.exe
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.pdb
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\CSharpAPI.dll
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\System.ValueTuple.dll
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\CSharpAPI.pdb
+C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\System.ValueTuple.xml
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.csprojAssemblyReference.cache
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\MainWindow.g.cs
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\App.g.cs
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader_MarkupCompile.cache
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader_MarkupCompile.lref
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.exe.config
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.exe
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\GooTrader.pdb
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\CSharpAPI.dll
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\CSharpAPI.pdb
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\MainWindow.baml
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.g.resources
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.Properties.Resources.resources
@@ -16,5 +18,3 @@ C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.csp
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.csproj.CopyComplete
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.exe
 C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\obj\Debug\GooTrader.pdb
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\System.ValueTuple.dll
-C:\Users\TheGoonior\Documents\GitHub\GooTrader\GooTrader\bin\Debug\System.ValueTuple.xml

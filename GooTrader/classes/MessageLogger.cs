@@ -23,18 +23,20 @@ namespace GooTrader
     /// Message Logger
     /// Used to log events with a timestamp
     /// </summary>
-    public class MessageLogger : ObservableCollection<LogMessage>
+    static public class MessageLogger
     {
+        static public ObservableCollection<LogMessage> messages;
         #region public Methods
         /// <summary>
         /// LogMessage(string msg)
         /// Timestamps a message with the current time and inserts it at the head of the message log
         /// </summary>
         /// <param name="msg"></param>
-        public void LogMessage(string msg, LogMessageType type = LogMessageType.INFO)
+        static public void LogMessage(string msg, LogMessageType type = LogMessageType.INFO)
         {
             var newLogEntry = new LogMessage(msg, type);
-            this.Insert(0, newLogEntry);
+            if (messages == null) throw new NullReferenceException();
+            messages.Insert(0, newLogEntry);
         }
 
         #endregion

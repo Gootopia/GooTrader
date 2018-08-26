@@ -1,313 +1,707 @@
-﻿using System;
+/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved.  This code is subject to the terms
+ * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IBApi;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using System.Windows;
 
 namespace GooTrader
 {
     public class IBClient : EWrapper
     {
-        // Code
-        public EClientSocket clientSocket;
-        public readonly EReaderSignal Signal;
-
-        public IBClient()
+        private EClientSocket clientSocket;
+        private int nextOrderId;
+        private int clientId;
+  
+        public Task<Contract> ResolveContractAsync(int conId, string refExch)
         {
-            Signal = new EReaderMonitorSignal();
-            clientSocket = new EClientSocket(this, Signal);
+            var reqId = new Random(DateTime.Now.Millisecond).Next();
+            var resolveResult = new TaskCompletionSource<Contract>();
+            var resolveContract_Error = new Action<int, int, string, Exception>((id, code, msg, ex) =>
+                {
+                    if (reqId != id)
+                        return;
+
+                    resolveResult.SetResult(null);
+                });
+            var resolveContract = new Action<int, ContractDetails>((id, details) =>
+                {
+                    if (id == reqId) 
+                        resolveResult.SetResult(details.Summary);
+                });
+            var contractDetailsEnd = new Action<int>(id =>
+            {
+                if (reqId == id && !resolveResult.Task.IsCompleted)
+                    resolveResult.SetResult(null);
+            });
+
+            var tmpError = Error;
+            var tmpContractDetails = ContractDetails;
+            var tmpContractDetailsEnd = ContractDetailsEnd;
+
+            Error = resolveContract_Error;
+            ContractDetails = resolveContract;
+            ContractDetailsEnd = contractDetailsEnd;
+
+            resolveResult.Task.ContinueWith(t => {
+                Error = tmpError;
+                ContractDetails = tmpContractDetails;
+                ContractDetailsEnd = tmpContractDetailsEnd; 
+            });
+
+            ClientSocket.reqContractDetails(reqId, new Contract() { ConId = conId, Exchange = refExch });
+
+            return resolveResult.Task;
         }
 
-        public void accountDownloadEnd(string account)
+        public Task<Contract[]> ResolveContractAsync(string secType, string symbol, string currency, string exchange)
         {
-            throw new NotImplementedException();
+            var reqId = new Random(DateTime.Now.Millisecond).Next();
+            var res = new TaskCompletionSource<Contract[]>();
+            var contractList = new List<Contract>();
+            var resolveContract_Error = new Action<int, int, string, Exception>((id, code, msg, ex) =>
+                {
+                    if (reqId != id)
+                        return;
+
+                    res.SetResult(new Contract[0]);
+                });
+            var contractDetails = new Action<int, ContractDetails>((id, details) =>
+                {
+                    if (reqId != id)
+                        return;
+
+                    contractList.Add(details.Summary);
+                });
+            var contractDetailsEnd = new Action<int>(id =>
+                {
+                    if (reqId == id)
+                        res.SetResult(contractList.ToArray());
+                });
+
+            var tmpError = Error;
+            var tmpContractDetails = ContractDetails;
+            var tmpContractDetailsEnd = ContractDetailsEnd;
+
+            Error = resolveContract_Error;
+            ContractDetails = contractDetails;
+            ContractDetailsEnd = contractDetailsEnd;
+
+            res.Task.ContinueWith(t => {
+                Error = tmpError;
+                ContractDetails = tmpContractDetails;
+                ContractDetailsEnd = tmpContractDetailsEnd; 
+            });
+
+            ClientSocket.reqContractDetails(reqId, new Contract() { SecType = secType, Symbol = symbol, Currency = currency, Exchange = exchange });
+
+            return res.Task;
         }
 
-        public void accountSummary(int reqId, string account, string tag, string value, string currency)
+        public int ClientId
         {
-            throw new NotImplementedException();
+            get { return clientId; }
+            set { clientId = value; }
         }
 
-        public void accountSummaryEnd(int reqId)
+        public IBClient(EReaderMonitorSignal signal)
         {
-            throw new NotImplementedException();
+            clientSocket = new EClientSocket(this, signal);
         }
 
-        public void accountUpdateMulti(int requestId, string account, string modelCode, string key, string value, string currency)
+        public EClientSocket ClientSocket
         {
-            throw new NotImplementedException();
+            get { return clientSocket; }
+            private set { clientSocket = value; }
         }
 
-        public void accountUpdateMultiEnd(int requestId)
+        public int NextOrderId
         {
-            throw new NotImplementedException();
+            get { return nextOrderId; }
+            set { nextOrderId = value; }
         }
 
-        public void bondContractDetails(int reqId, ContractDetails contract)
+        public event Action<int, int, string, Exception> Error;
+
+        void EWrapper.error(Exception e)
         {
-            throw new NotImplementedException();
+            var tmp = Error;
+            Application.Current.Dispatcher.BeginInvoke(
+  DispatcherPriority.Background,
+  new Action(() => MessageLogger.LogMessage(e.Message)));
+            if (tmp != null)
+                tmp(0, 0, null, e);
         }
 
-        public void commissionReport(CommissionReport commissionReport)
+        void EWrapper.error(string str)
         {
-            throw new NotImplementedException();
+            var tmp = Error;
+            Application.Current.Dispatcher.BeginInvoke(
+DispatcherPriority.Background,
+new Action(() => MessageLogger.LogMessage(str)));
+
+            if (tmp != null)
+                tmp(0, 0, str, null);
         }
 
-        public void connectAck()
+        void EWrapper.error(int id, int errorCode, string errorMsg)
         {
-            //throw new NotImplementedException();
+            var tmp = Error;
+            Application.Current.Dispatcher.BeginInvoke(
+DispatcherPriority.Background,
+new Action(() => MessageLogger.LogMessage(String.Format("Error {0}:{1}",errorCode.ToString(),errorMsg))));
+            if (tmp != null)
+                tmp(id, errorCode, errorMsg, null);
         }
 
-        public void connectionClosed()
+        public event Action ConnectionClosed;
+
+        void EWrapper.connectionClosed()
         {
-            throw new NotImplementedException();
+            var tmp = ConnectionClosed;
+
+            if (tmp != null)
+                tmp();
         }
 
-        public void contractDetails(int reqId, ContractDetails contractDetails)
+        public event Action<long> CurrentTime;
+
+        void EWrapper.currentTime(long time)
         {
-            throw new NotImplementedException();
+            var tmp = CurrentTime;
+
+            if (tmp != null)
+                tmp(time);
         }
 
-        public void contractDetailsEnd(int reqId)
+        public event Action<int, int, double, int> TickPrice;
+
+        void EWrapper.tickPrice(int tickerId, int field, double price, int canAutoExecute)
         {
-            throw new NotImplementedException();
+            var tmp = TickPrice;
+
+            if (tmp != null)
+                tmp(tickerId, field, price, canAutoExecute);
         }
 
-        public void currentTime(long time)
+        public event Action<int, int, int> TickSize;
+
+        void EWrapper.tickSize(int tickerId, int field, int size)
         {
-            throw new NotImplementedException();
+            var tmp = TickSize;
+
+            if (tmp != null)
+                tmp(tickerId, field, size);
         }
 
-        public void deltaNeutralValidation(int reqId, UnderComp underComp)
+        public event Action<int, int, string> TickString;
+
+        void EWrapper.tickString(int tickerId, int tickType, string value)
         {
-            throw new NotImplementedException();
+            var tmp = TickString;
+
+            if (tmp != null)
+                tmp(tickerId, tickType, value);
         }
 
-        public void displayGroupList(int reqId, string groups)
+        public event Action<int, int, double> TickGeneric;
+
+        void EWrapper.tickGeneric(int tickerId, int field, double value)
         {
-            throw new NotImplementedException();
+            var tmp = TickGeneric;
+
+            if (tmp != null)
+                tmp(tickerId, field, value);            
         }
 
-        public void displayGroupUpdated(int reqId, string contractInfo)
+        public event Action<int, int, double, string, double, int, string, double, double> TickEFP;
+
+        void EWrapper.tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture, int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
         {
-            throw new NotImplementedException();
+            var tmp = TickEFP;
+
+            if (tmp != null)
+                tmp(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays, futureLastTradeDate, dividendImpact, dividendsToLastTradeDate);
         }
 
-        public void error(Exception e)
+        public event Action<int> TickSnapshotEnd;
+
+        void EWrapper.tickSnapshotEnd(int tickerId)
         {
-            int i=0;
-            i++;
+            var tmp = TickSnapshotEnd;
+
+            if (tmp != null)
+                tmp(tickerId);            
         }
 
-        public void error(string str)
+        public event Action<int> NextValidId;
+
+        void EWrapper.nextValidId(int orderId)
         {
-            throw new NotImplementedException();
+            var tmp = NextValidId;
+
+            if (tmp != null)
+                tmp(orderId);
+
+            NextOrderId = orderId;
         }
 
-        public void error(int id, int errorCode, string errorMsg)
+        public event Action<int, UnderComp> DeltaNeutralValidation;
+
+        void EWrapper.deltaNeutralValidation(int reqId, UnderComp underComp)
         {
-            throw new NotImplementedException();
+            var tmp = DeltaNeutralValidation;
+
+            if (tmp != null)
+                tmp(reqId, underComp);            
         }
 
-        public void execDetails(int reqId, Contract contract, Execution execution)
+        public event Action<string> ManagedAccounts;
+
+        void EWrapper.managedAccounts(string accountsList)
         {
-            throw new NotImplementedException();
+            var tmp = ManagedAccounts;
+
+            if (tmp != null)
+                tmp(accountsList);            
         }
 
-        public void execDetailsEnd(int reqId)
+        public event Action<int, int, double, double, double, double, double, double, double, double> TickOptionCommunication;
+
+        void EWrapper.tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
         {
-            throw new NotImplementedException();
+            var tmp = TickOptionCommunication;
+
+            if (tmp != null)
+                tmp(tickerId, field, impliedVolatility, delta, optPrice, pvDividend, gamma, vega, theta, undPrice);
         }
 
-        public void fundamentalData(int reqId, string data)
+        public event Action<int, string, string, string, string> AccountSummary;
+
+        void EWrapper.accountSummary(int reqId, string account, string tag, string value, string currency)
         {
-            throw new NotImplementedException();
+            var tmp = AccountSummary;
+
+            if (tmp != null)
+                tmp(reqId, account, tag, value, currency);
         }
 
-        public void historicalData(int reqId, string date, double open, double high, double low, double close, int volume, int count, double WAP, bool hasGaps)
+        public event Action<int> AccountSummaryEnd;
+
+        void EWrapper.accountSummaryEnd(int reqId)
         {
-            throw new NotImplementedException();
+            var tmp = AccountSummaryEnd;
+
+            if (tmp != null)
+                tmp(reqId);
         }
 
-        public void historicalDataEnd(int reqId, string start, string end)
+        public event Action<string, string, string, string> UpdateAccountValue;
+
+        void EWrapper.updateAccountValue(string key, string value, string currency, string accountName)
         {
-            throw new NotImplementedException();
+            var tmp = UpdateAccountValue;
+
+            if (tmp != null)
+                tmp(key, value, currency, accountName);
         }
 
-        public void managedAccounts(string accountsList)
+        public event Action<Contract, double, double, double, double, double, double, string> UpdatePortfolio;
+
+        void EWrapper.updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealisedPNL, double realisedPNL, string accountName)
         {
-            throw new NotImplementedException();
+            var tmp = UpdatePortfolio;
+
+            if (tmp != null)
+                tmp(contract, position, marketPrice, marketValue, averageCost, unrealisedPNL, realisedPNL, accountName);
         }
 
-        public void marketDataType(int reqId, int marketDataType)
+        public event Action<string> UpdateAccountTime;
+
+        void EWrapper.updateAccountTime(string timestamp)
         {
-            throw new NotImplementedException();
+            var tmp = UpdateAccountTime;
+
+            if (tmp != null)
+                tmp(timestamp);
         }
 
-        public void nextValidId(int orderId)
+        public event Action<string> AccountDownloadEnd;
+
+        void EWrapper.accountDownloadEnd(string account)
         {
-            throw new NotImplementedException();
+            var tmp = AccountDownloadEnd;
+
+            if (tmp != null)
+                tmp(account);
         }
 
-        public void openOrder(int orderId, Contract contract, Order order, OrderState orderState)
+        public event Action<int, string, double, double, double, int, int, double, int, string> OrderStatus;
+
+        void EWrapper.orderStatus(int orderId, string status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, string whyHeld)
         {
-            throw new NotImplementedException();
+            var tmp = OrderStatus;
+
+            if (tmp != null)
+                tmp(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld);
         }
 
-        public void openOrderEnd()
+        public event Action<int, Contract, Order, OrderState> OpenOrder;
+
+        void EWrapper.openOrder(int orderId, Contract contract, Order order, OrderState orderState)
         {
-            throw new NotImplementedException();
+            var tmp = OpenOrder;
+
+            if (tmp != null)
+                tmp(orderId, contract, order, orderState);
         }
 
-        public void orderStatus(int orderId, string status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, string whyHeld)
+        public event Action OpenOrderEnd;
+
+        void EWrapper.openOrderEnd()
         {
-            throw new NotImplementedException();
+            var tmp = OpenOrderEnd;
+
+            if (tmp != null)
+                tmp();
         }
 
-        public void position(string account, Contract contract, double pos, double avgCost)
+        public event Action<int, ContractDetails> ContractDetails;
+
+        void EWrapper.contractDetails(int reqId, ContractDetails contractDetails)
         {
-            throw new NotImplementedException();
+            var tmp = ContractDetails;
+
+            if (tmp != null)
+                tmp(reqId, contractDetails);
         }
 
-        public void positionEnd()
+        public event Action<int> ContractDetailsEnd;
+
+        void EWrapper.contractDetailsEnd(int reqId)
         {
-            throw new NotImplementedException();
+            var tmp = ContractDetailsEnd;
+
+            if (tmp != null)
+                tmp(reqId);
         }
 
-        public void positionMulti(int requestId, string account, string modelCode, Contract contract, double pos, double avgCost)
+        public event Action<int, Contract, Execution> ExecDetails;
+
+        void EWrapper.execDetails(int reqId, Contract contract, Execution execution)
         {
-            throw new NotImplementedException();
+            var tmp = ExecDetails;
+
+            if (tmp != null)
+                tmp(reqId, contract, execution);
         }
 
-        public void positionMultiEnd(int requestId)
+        public event Action<int> ExecDetailsEnd;
+
+        void EWrapper.execDetailsEnd(int reqId)
         {
-            throw new NotImplementedException();
+            var tmp = ExecDetailsEnd;
+
+            if (tmp != null)
+                tmp(reqId);
         }
 
-        public void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double WAP, int count)
+        public event Action<CommissionReport> CommissionReport;
+
+        void EWrapper.commissionReport(CommissionReport commissionReport)
         {
-            throw new NotImplementedException();
+            var tmp = CommissionReport;
+
+            if (tmp != null)
+                tmp(commissionReport);
         }
 
-        public void receiveFA(int faDataType, string faXmlData)
+        public event Action<int, string> FundamentalData;
+
+        void EWrapper.fundamentalData(int reqId, string data)
         {
-            throw new NotImplementedException();
+            var tmp = FundamentalData;
+
+            if (tmp != null)
+                tmp(reqId, data);
         }
 
-        public void scannerData(int reqId, int rank, ContractDetails contractDetails, string distance, string benchmark, string projection, string legsStr)
+        public event Action<int, string, double, double, double, double, int, int, double, bool> HistoricalData;
+
+        void EWrapper.historicalData(int reqId, string date, double open, double high, double low, double close, int volume, int count, double WAP, bool hasGaps)
         {
-            throw new NotImplementedException();
+            var tmp = HistoricalData;
+
+            if (tmp != null)
+                tmp(reqId, date, open, high, low, close, volume, count, WAP, hasGaps);
         }
 
-        public void scannerDataEnd(int reqId)
+        public event Action<int, string, string> HistoricalDataEnd;
+
+        void EWrapper.historicalDataEnd(int reqId, string startDate, string endDate)
         {
-            throw new NotImplementedException();
+            var tmp = HistoricalDataEnd;
+
+            if (tmp != null)
+                tmp(reqId, startDate, endDate);
         }
 
-        public void scannerParameters(string xml)
+        public event Action<int, int> MarketDataType;
+
+        void EWrapper.marketDataType(int reqId, int marketDataType)
         {
-            throw new NotImplementedException();
+            var tmp = MarketDataType;
+
+            if (tmp != null)
+                tmp(reqId, marketDataType);
         }
 
-        public void securityDefinitionOptionParameter(int reqId, string exchange, int underlyingConId, string tradingClass, string multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        public event Action<int, int, int, int, double, int> UpdateMktDepth;
+
+        void EWrapper.updateMktDepth(int tickerId, int position, int operation, int side, double price, int size)
         {
-            throw new NotImplementedException();
+            var tmp = UpdateMktDepth;
+
+            if (tmp != null)
+                tmp(tickerId, position, operation, side, price, size);
         }
 
-        public void securityDefinitionOptionParameterEnd(int reqId)
+        public event Action<int, int, string, int, int, double, int> UpdateMktDepthL2;
+
+        void EWrapper.updateMktDepthL2(int tickerId, int position, string marketMaker, int operation, int side, double price, int size)
         {
-            throw new NotImplementedException();
+            var tmp = UpdateMktDepthL2;
+
+            if (tmp != null)
+                tmp(tickerId, position, marketMaker, operation, side, price, size);
         }
 
-        public void softDollarTiers(int reqId, SoftDollarTier[] tiers)
+        public event Action<int, int, String, String> UpdateNewsBulletin;
+
+        void EWrapper.updateNewsBulletin(int msgId, int msgType, String message, String origExchange)
         {
-            throw new NotImplementedException();
+            var tmp = UpdateNewsBulletin;
+
+            if (tmp != null)
+                tmp(msgId, msgType, message, origExchange);
         }
 
-        public void tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture, int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
+        public event Action<string, Contract, double, double> Position;
+
+        void EWrapper.position(string account, Contract contract, double pos, double avgCost)
         {
-            throw new NotImplementedException();
+            var tmp = Position;
+
+            if (tmp != null)
+                tmp(account, contract, pos, avgCost);
         }
 
-        public void tickGeneric(int tickerId, int field, double value)
+        public event Action PositionEnd;
+
+        void EWrapper.positionEnd()
         {
-            throw new NotImplementedException();
+            var tmp = PositionEnd;
+
+            if (tmp != null)
+                tmp();            
         }
 
-        public void tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
+        public event Action<int, long, double, double, double, double, long, double, int> RealtimeBar;
+
+        void EWrapper.realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double WAP, int count)
         {
-            throw new NotImplementedException();
+            var tmp = RealtimeBar;
+
+            if (tmp != null)
+                tmp(reqId, time, open, high, low, close, volume, WAP, count);
         }
 
-        public void tickPrice(int tickerId, int field, double price, int canAutoExecute)
+        public event Action<string> ScannerParameters;
+
+        void EWrapper.scannerParameters(string xml)
         {
-            throw new NotImplementedException();
+            var tmp = ScannerParameters;
+
+            if (tmp != null)
+                tmp(xml);
         }
 
-        public void tickSize(int tickerId, int field, int size)
+        public event Action<int, int, ContractDetails, string, string, string, string> ScannerData;
+
+        void EWrapper.scannerData(int reqId, int rank, ContractDetails contractDetails, string distance, string benchmark, string projection, string legsStr)
         {
-            throw new NotImplementedException();
+            var tmp = ScannerData;
+
+            if (tmp != null)
+                tmp(reqId, rank, contractDetails, distance, benchmark, projection, legsStr);
         }
 
-        public void tickSnapshotEnd(int tickerId)
+        public event Action<int> ScannerDataEnd;
+
+        void EWrapper.scannerDataEnd(int reqId)
         {
-            throw new NotImplementedException();
+            var tmp = ScannerDataEnd;
+
+            if (tmp != null)
+                tmp(reqId);
         }
 
-        public void tickString(int tickerId, int field, string value)
+        public event Action<int, string> ReceiveFA;
+
+        void EWrapper.receiveFA(int faDataType, string faXmlData)
         {
-            throw new NotImplementedException();
+            var tmp = ReceiveFA;
+
+            if (tmp != null)
+                tmp(faDataType, faXmlData);
         }
 
-        public void updateAccountTime(string timestamp)
+        public event Action<int, ContractDetails> BondContractDetails;
+
+        void EWrapper.bondContractDetails(int requestId, ContractDetails contractDetails)
         {
-            throw new NotImplementedException();
+            var tmp = BondContractDetails;
+
+            if (tmp != null)
+                tmp(requestId, contractDetails);
         }
 
-        public void updateAccountValue(string key, string value, string currency, string accountName)
+        public event Action<string> VerifyMessageAPI;
+
+        void EWrapper.verifyMessageAPI(string apiData)
         {
-            throw new NotImplementedException();
+            var tmp = VerifyMessageAPI;
+
+            if (tmp != null)
+                tmp(apiData);
+        }
+        public event Action<bool, string> VerifyCompleted;
+
+        void EWrapper.verifyCompleted(bool isSuccessful, string errorText)
+        {
+            var tmp = VerifyCompleted;
+
+            if (tmp != null)
+                tmp(isSuccessful, errorText);
         }
 
-        public void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size)
+        public event Action<string, string> VerifyAndAuthMessageAPI;
+
+        void EWrapper.verifyAndAuthMessageAPI(string apiData, string xyzChallenge)
         {
-            throw new NotImplementedException();
+            var tmp = VerifyAndAuthMessageAPI;
+
+            if (tmp != null)
+                tmp(apiData, xyzChallenge);
         }
 
-        public void updateMktDepthL2(int tickerId, int position, string marketMaker, int operation, int side, double price, int size)
+        public event Action<bool, string> VerifyAndAuthCompleted;
+
+        void EWrapper.verifyAndAuthCompleted(bool isSuccessful, string errorText)
         {
-            throw new NotImplementedException();
+            var tmp = VerifyAndAuthCompleted;
+
+            if (tmp != null)
+                tmp(isSuccessful, errorText);            
         }
 
-        public void updateNewsBulletin(int msgId, int msgType, string message, string origExchange)
+        public event Action<int, string> DisplayGroupList;
+
+        void EWrapper.displayGroupList(int reqId, string groups)
         {
-            throw new NotImplementedException();
+            var tmp = DisplayGroupList;
+
+            if (tmp != null)
+                tmp(reqId, groups);
         }
 
-        public void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealisedPNL, double realisedPNL, string accountName)
+        public event Action<int, string> DisplayGroupUpdated;
+
+        void EWrapper.displayGroupUpdated(int reqId, string contractInfo)
         {
-            throw new NotImplementedException();
+            var tmp = DisplayGroupUpdated;
+
+            if (tmp != null)
+                tmp(reqId, contractInfo);
         }
 
-        public void verifyAndAuthCompleted(bool isSuccessful, string errorText)
+
+        void EWrapper.connectAck()
         {
-            throw new NotImplementedException();
+            if (ClientSocket.AsyncEConnect)
+                ClientSocket.startApi();
         }
 
-        public void verifyAndAuthMessageAPI(string apiData, string xyzChallenge)
+        public event Action<int, string, string, Contract, double, double> PositionMulti;
+
+        void EWrapper.positionMulti(int reqId, string account, string modelCode, Contract contract, double pos, double avgCost)
         {
-            throw new NotImplementedException();
+            var tmp = PositionMulti;
+
+            if (tmp != null)
+                tmp(reqId, account, modelCode, contract, pos, avgCost);
         }
 
-        public void verifyCompleted(bool isSuccessful, string errorText)
+        public event Action<int> PositionMultiEnd;
+
+        void EWrapper.positionMultiEnd(int reqId)
         {
-            throw new NotImplementedException();
+            var tmp = PositionMultiEnd;
+
+            if (tmp != null)
+                tmp(reqId);
         }
 
-        public void verifyMessageAPI(string apiData)
+        public event Action<int, string, string, string, string, string> AccountUpdateMulti;
+
+        void EWrapper.accountUpdateMulti(int reqId, string account, string modelCode, string key, string value, string currency)
         {
-            throw new NotImplementedException();
+            var tmp = AccountUpdateMulti;
+
+            if (tmp != null)
+                tmp(reqId, account, modelCode, key, value, currency);
+        }
+
+        public event Action<int> AccountUpdateMultiEnd;
+
+        void EWrapper.accountUpdateMultiEnd(int reqId)
+        {
+            var tmp = AccountUpdateMultiEnd;
+
+            if (tmp != null)
+                tmp(reqId);
+        }
+
+        public event Action<int, string, int, string, string, HashSet<string>, HashSet<double>> SecurityDefinitionOptionParameter;
+
+        void EWrapper.securityDefinitionOptionParameter(int reqId, string exchange, int underlyingConId, string tradingClass, string multiplier, HashSet<string> expirations, HashSet<double> strikes)
+        {
+            var tmp = SecurityDefinitionOptionParameter;
+
+            if (tmp != null)
+                tmp(reqId, exchange, underlyingConId, tradingClass, multiplier, expirations, strikes);
+        }
+
+        public event Action<int> SecurityDefinitionOptionParameterEnd;
+
+        void EWrapper.securityDefinitionOptionParameterEnd(int reqId)
+        {
+            var tmp = SecurityDefinitionOptionParameterEnd;
+
+            if (tmp != null)
+                tmp(reqId);
+        }
+
+        public event Action<int, SoftDollarTier[]> SoftDollarTiers;
+
+        void EWrapper.softDollarTiers(int reqId, SoftDollarTier[] tiers)
+        {
+            var tmp = SoftDollarTiers;
+
+            if (tmp != null)
+                tmp(reqId, tiers);
         }
     }
 }

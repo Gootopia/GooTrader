@@ -68,6 +68,7 @@
     <Compile Include="backend\IBClient.cs" />
     <Compile Include="classes\GooContract.cs" />
     <Compile Include="classes\MessageLogger.cs" />
+    <Compile Include="classes\ViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
