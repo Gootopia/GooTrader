@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace GooTrader
 {
@@ -34,26 +35,11 @@ namespace GooTrader
 
             // MessageLogger is static class, so need to assign a messages collection. Just use the one from the ViewModel
             MessageLogger.messages = viewmodel.messages;
+
+            // Event handlers for all desired TWS events
+            ib.NextValidId += Ib_NextValidId;
+            ib.ConnectionClosed += Ib_ConnectionClosed;
+            ib.Error += Ib_Error;
          }
-
-        private void btnConnect_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                ib.ClientId = 0;
-                ib.ClientSocket.eConnect("127.0.0.1", 7497, 0);
-
-                // Start an IB reader thread
-                var reader = new EReader(ib.ClientSocket, signal);
-                reader.Start();
-
-                // background thread to process TWS messages
-                new Thread(() => { while (ib.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
-            }
-            catch (Exception)
-            {
-                throw new Exception();
-            }
-        }
     }
 }

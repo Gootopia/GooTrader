@@ -203,7 +203,6 @@ namespace GooTrader
         {
             var tmp = Error;
 
-            MessageLogger.LogMessage(errorMsg);
             if (tmp != null)
                 tmp(id, errorCode, errorMsg, null);
         }
@@ -212,7 +211,6 @@ namespace GooTrader
         {
             var tmp = ConnectionClosed;
 
-            MessageLogger.LogMessage("CONNECTION CLOSED!");
             if (tmp != null)
                 tmp();
         }

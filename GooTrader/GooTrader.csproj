@@ -68,7 +68,10 @@
     <Compile Include="backend\IBClient.cs" />
     <Compile Include="classes\GooContract.cs" />
     <Compile Include="classes\MessageLogger.cs" />
-    <Compile Include="classes\ViewModel.cs" />
+    <Compile Include="classes\Tws.cs" />
+    <Compile Include="classes\UIThread.cs" />
+    <Compile Include="classes\ViewModel\ViewModel.cs" />
+    <Compile Include="classes\ViewModel\ViewModelCode.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -107,5 +110,6 @@
       <Name>CSharpAPI</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

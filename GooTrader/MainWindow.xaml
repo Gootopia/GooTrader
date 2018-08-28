@@ -14,7 +14,8 @@
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="3*"/>
-            </Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
             <!--Message Logger-->
             <GroupBox Header="Log" Grid.Row="2">
                 <DataGrid x:Name="viewLog" ItemsSource ="{Binding messages}" AutoGenerateColumns="False" IsReadOnly="True" AlternatingRowBackground="#FF14F9E4">
@@ -37,5 +38,8 @@
             <StackPanel Grid.Row="0" Orientation="Horizontal">
                 <Button x:Name="btnConnect" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Click="btnConnect_Click"/>
             </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <Label x:Name="connectionStatus" Content="{Binding IsTwsConnected}"/>
+        </StackPanel>
         </Grid>
 </Window>
