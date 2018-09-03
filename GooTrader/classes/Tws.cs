@@ -93,13 +93,13 @@ namespace GooTrader
                 var contractKey = contractDetails.MarketName + "_" + contractDetails.ValidExchanges;
                 GooContract currentContract;
 
-                if (model.contracts.ContainsKey(contractKey) == false)
+                if (model.Contracts.ContainsKey(contractKey) == false)
                 {
                     currentContract = new GooContract();
                     currentContract.Name = contractDetails.LongName;
                     currentContract.Symbol = contractDetails.MarketName;
-                    model.contracts.Add(contractKey, currentContract);
-                    vm.contracts.Add(currentContract);
+                    model.Contracts.Add(contractKey, currentContract);
+                    vm.Contracts.Add(currentContract);
                 }
             });
         }

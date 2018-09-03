@@ -35,7 +35,7 @@ namespace GooTrader
             main.DataContext = vm;
 
             // MessageLogger is static class, so need to assign a messages collection. Just use the one from the ViewModel
-            MessageLogger.messages = vm.messages;
+            MessageLogger.messages = vm.Messages;
 
             // Event handlers for all desired TWS events
             ib.NextValidId += Ib_NextValidId;

@@ -11,12 +11,12 @@ namespace GooTrader
     /// </summary>
     public class Model
     {
-        public Dictionary<string,GooContract> contracts { get; set; }
+        public Dictionary<string,GooContract> Contracts { get; set; }
 
         #region Constructor
         public Model()
         {
-            contracts = new Dictionary<string, GooContract>();
+            Contracts = new Dictionary<string, GooContract>();
         }
         #endregion Constructor
     }
