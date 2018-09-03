@@ -120,7 +120,8 @@ namespace GooTrader
 
         public int NextOrderId
         {
-            get { return nextOrderId; }
+            // Auto increment to always have a valid request id.
+            get { return nextOrderId++; }
             set { nextOrderId = value; }
         }
         #endregion Properties

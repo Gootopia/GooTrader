@@ -15,16 +15,15 @@ namespace GooTrader
     /// </summary>
     public partial class MainWindow : Window
     {
-        // ViewModel component of MVVM.
+        // MVVM components
         public ViewModel vm = new ViewModel();
+        public Model model = new Model();
 
         // Reader for passing message between this app and TWS host
         private EReaderMonitorSignal signal = new EReaderMonitorSignal();
 
         // ib client for interaction with TWS
         public IBClient ib;
-
-        public Dictionary<string, GooContract> contracts = new Dictionary<string, GooContract>();
         
         public MainWindow()
         {
@@ -45,32 +44,5 @@ namespace GooTrader
             ib.ContractDetails += Ib_ContractDetails;
             ib.ContractDetailsEnd += Ib_ContractDetailsEnd;
          }
-
-        private void Ib_ContractDetailsEnd(int obj)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void Ib_ContractDetails(int arg1, ContractDetails contractDetails)
-        {
-            // Because contract is bound in Viewmodel, it must be created on the UI thread.
-            // Also, because thread operations
-            UIThread.Update(() =>
-            {
-                var contractKey = contractDetails.MarketName + "_" + contractDetails.ValidExchanges;
-                GooContract currentContract;
-
-                if(contracts.ContainsKey(contractKey) == false)
-                {
-                    currentContract = new GooContract();
-                    currentContract.Name = contractDetails.LongName;
-                    currentContract.Symbol = contractDetails.MarketName;
-                    contracts.Add(contractKey, currentContract);
-                    vm.contracts.Add(currentContract);
-                }
-            });
-
-            //throw new NotImplementedException();
-        }
     }
 }

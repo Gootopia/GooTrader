@@ -75,6 +75,34 @@ namespace GooTrader
             // nextValidId event means TWS is ready to Go!
             ib.ClientSocket.IsConnected();
         }
+
+        private void Ib_ContractDetailsEnd(int reqId)
+        {
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0} completed", reqId.ToString()));
+        }
+
+        private void Ib_ContractDetails(int reqId, ContractDetails contractDetails)
+        {
+            var contractName = contractDetails.LongName + contractDetails.ContractMonth;
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", reqId.ToString(), contractName));
+
+            // Because contract is bound in Viewmodel, it must be created on the UI thread.
+            // Also, because thread operations
+            UIThread.Update(() =>
+            {
+                var contractKey = contractDetails.MarketName + "_" + contractDetails.ValidExchanges;
+                GooContract currentContract;
+
+                if (model.contracts.ContainsKey(contractKey) == false)
+                {
+                    currentContract = new GooContract();
+                    currentContract.Name = contractDetails.LongName;
+                    currentContract.Symbol = contractDetails.MarketName;
+                    model.contracts.Add(contractKey, currentContract);
+                    vm.contracts.Add(currentContract);
+                }
+            });
+        }
         #endregion TWS Event Handlers
     }
 }

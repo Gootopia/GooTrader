@@ -29,10 +29,10 @@
             <!-- Contracts-->
             <GroupBox Header="Contracts" Grid.Row="1">
                 <DataGrid x:Name="viewContracts" ItemsSource="{Binding contracts}" AutoGenerateColumns="False" AlternatingRowBackground="#FF63E8F5" AllowDrop="True" IsReadOnly="True">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Contract" Binding="{Binding Name}"></DataGridTextColumn>
-                    <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"></DataGridTextColumn>
-                </DataGrid.Columns>
+                    <DataGrid.Columns>
+                         <DataGridTextColumn Header="Contract" Binding="{Binding Name}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"></DataGridTextColumn>
+                    </DataGrid.Columns>
                 </DataGrid>
             </GroupBox>
             <!-- User Control-->
