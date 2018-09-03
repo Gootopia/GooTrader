@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Windows;
 
 namespace GooTrader
@@ -13,7 +15,7 @@ namespace GooTrader
     {
         // Available contracts
         public ObservableCollection<GooContract> contracts { get; set; }
-
+        
         // Message Log
         public ObservableCollection<LogMessage> messages { get; set; }
 
@@ -34,6 +36,7 @@ namespace GooTrader
         public ViewModel()
         {
             // Need to create an instance for each view item
+            //contracts = new ObservableCollection<GooContract>();
             contracts = new ObservableCollection<GooContract>();
             messages = new ObservableCollection<LogMessage>();
         }

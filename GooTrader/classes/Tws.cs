@@ -12,6 +12,11 @@ namespace GooTrader
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static class Exchanges
+        {
+            public static string Globex = "GLOBEX";
+        }
+
         /// <summary>
         /// Open a connection to TWS
         /// </summary>
@@ -56,7 +61,6 @@ namespace GooTrader
                 ib.ClientSocket.eDisconnect();
                 errMsg = "TWS Disconnected!";
             }
-                ib.ClientSocket.eDisconnect();
 
             MessageLogger.LogMessage(errMsg);
         }
@@ -66,7 +70,7 @@ namespace GooTrader
         {
             ib.NextOrderId = id;
             // Access on viewmodel is prohibited outside UI thread unless using Dispatcher!
-            UIThread.Update(() => viewmodel.IsTwsConnected = true);
+            UIThread.Update(() => vm.IsTwsConnected = true);
 
             // nextValidId event means TWS is ready to Go!
             ib.ClientSocket.IsConnected();
