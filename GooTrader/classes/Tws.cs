@@ -18,7 +18,7 @@ namespace GooTrader
         }
 
         /// <summary>
-        /// Open a connection to TWS
+        /// Open a connection to TWS platform
         /// </summary>
         /// <returns></returns>
         public void TWS_Connect()
@@ -40,6 +40,16 @@ namespace GooTrader
             {
                 throw new Exception();
             }
+        }
+
+        /// <summary>
+        /// Operations to perform once TWS connection is acquired.
+        /// Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
+        /// </summary>
+        public void TWS_Connected()
+        {
+            MessageLogger.LogMessage("Requesting TWS Time");
+            ib.ClientSocket.reqCurrentTime();
         }
 
         #region TWS Event Handlers
@@ -69,18 +79,20 @@ namespace GooTrader
         private void Ib_NextValidId(int id)
         {
             ib.NextOrderId = id;
-            // Access on viewmodel is prohibited outside UI thread unless using Dispatcher!
-            UIThread.Update(() => vm.IsTwsConnected = true);
+            // Access on viewmodel is prohibited outside UI thread unless using Dispatcher
+            UIThread.Update(() => vm.IsTwsConnected = ib.ClientSocket.IsConnected());
 
-            // nextValidId event means TWS is ready to Go!
-            ib.ClientSocket.IsConnected();
+            // perform any actions needed after a connection has occurred.
+            TWS_Connected();
         }
 
+        // TWS has finished with all details for ContractDetailsRequest (all expirations, etc.)
         private void Ib_ContractDetailsEnd(int reqId)
         {
             MessageLogger.LogMessage(String.Format("ContractDetails request {0} completed", reqId.ToString()));
         }
 
+        // TWS response for a single instance of contractDetails for a given request
         private void Ib_ContractDetails(int reqId, ContractDetails contractDetails)
         {
             var contractName = contractDetails.LongName + contractDetails.ContractMonth;
@@ -98,10 +110,30 @@ namespace GooTrader
                     currentContract = new GooContract();
                     currentContract.Name = contractDetails.LongName;
                     currentContract.Symbol = contractDetails.MarketName;
+
+                    // TWS returns contracts in calendar order (front month first).
+                    // First month is normally highest volume, so we'll use that for now
+                    currentContract.Expiration = contractDetails.ContractMonth;
+
+                    // Add this contract information to the model as well as the view model
                     model.Contracts.Add(contractKey, currentContract);
                     vm.Contracts.Add(currentContract);
                 }
             });
+        }
+
+        // TWS response with request for server time. Used to get local offset
+        private void Ib_CurrentTime(long time)
+        {
+            var twsTime = new DateTime(1970, 1, 1);
+            twsTime = twsTime.AddSeconds(time).ToLocalTime();
+            var localTime = DateTime.Now;
+
+            model.ServerTimeOffset = twsTime - localTime;      
+
+            var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms", 
+                twsTime.ToLongTimeString(), localTime.ToLongTimeString(), model.ServerTimeOffset.TotalMilliseconds.ToString());
+            MessageLogger.LogMessage(msg);
         }
         #endregion TWS Event Handlers
     }

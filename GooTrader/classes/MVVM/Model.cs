@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Windows;
+using System;
 
 namespace GooTrader
 {
@@ -11,6 +12,10 @@ namespace GooTrader
     /// </summary>
     public class Model
     {
+        // Offset between local and TWS time
+        public TimeSpan ServerTimeOffset { get; set; }
+
+        // Contracts list. Keys are "Ticker_Exchange"
         public Dictionary<string,GooContract> Contracts { get; set; }
 
         #region Constructor

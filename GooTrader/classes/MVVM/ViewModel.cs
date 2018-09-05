@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Windows;
+using System;
 
 namespace GooTrader
 {
@@ -28,7 +29,20 @@ namespace GooTrader
         // Using a DependencyProperty as the backing store for IsTwsConnected.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty IsTwsConnectedProperty =
             DependencyProperty.Register("IsTwsConnected", typeof(bool), typeof(ViewModel), new PropertyMetadata(false));
-        #endregion IsConnected
+        #endregion IsTwsConnected
+
+        // System Time for running clock display
+        #region SystemTime
+         public DateTime SystemTime
+        {
+            get { return (DateTime)GetValue(SystemTimeProperty); }
+            set { SetValue(SystemTimeProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for SystemTime.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SystemTimeProperty =
+            DependencyProperty.Register("SystemTime", typeof(DateTime), typeof(ViewModel), new PropertyMetadata(new DateTime(1,1,1)));
+        #endregion
 
         #region Constructor
         public ViewModel()

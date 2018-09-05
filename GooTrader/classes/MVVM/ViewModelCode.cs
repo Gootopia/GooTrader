@@ -1,9 +1,11 @@
 ﻿using IBApi;
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Data;
 
 namespace GooTrader
 {
@@ -30,7 +32,6 @@ namespace GooTrader
             fut_nq.SecType = "FUT";
             fut_nq.Exchange = Exchanges.Globex;
             ib.ClientSocket.reqContractDetails(ib.NextOrderId, fut_nq);
-
         }
     }
 }

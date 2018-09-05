@@ -66,6 +66,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="backend\IBClient.cs" />
+    <Compile Include="classes\Converters\Converters.cs" />
     <Compile Include="classes\GooContract.cs" />
     <Compile Include="classes\MessageLogger.cs" />
     <Compile Include="classes\MVVM\Model.cs" />

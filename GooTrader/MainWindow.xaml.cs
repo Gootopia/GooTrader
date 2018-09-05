@@ -15,7 +15,7 @@ namespace GooTrader
     /// </summary>
     public partial class MainWindow : Window
     {
-        // MVVM components
+        // MVVM components.
         public ViewModel vm = new ViewModel();
         public Model model = new Model();
 
@@ -38,11 +38,31 @@ namespace GooTrader
             MessageLogger.messages = vm.Messages;
 
             // Event handlers for all desired TWS events
+            #region Add Event Handlers
             ib.NextValidId += Ib_NextValidId;
             ib.ConnectionClosed += Ib_ConnectionClosed;
             ib.Error += Ib_Error;
             ib.ContractDetails += Ib_ContractDetails;
             ib.ContractDetailsEnd += Ib_ContractDetailsEnd;
-         }
+            ib.CurrentTime += Ib_CurrentTime;
+            #endregion Add Event Handlers
+
+            // System timer for clock
+            DispatcherTimer sysClock = new DispatcherTimer();
+            sysClock.Interval = TimeSpan.FromSeconds(1);
+            sysClock.Tick += SysClock_Tick;
+            sysClock.Start();
+        }
+
+        // 1 second tick timer for updating clock
+        private void SysClock_Tick(object sender, EventArgs e)
+        {
+            // While connected to TWS, need to sync the time
+            if (vm.IsTwsConnected == true)
+                vm.SystemTime = DateTime.Now + model.ServerTimeOffset;
+            else
+                // Tiny, tiny offset to force notify of change property, but won't change the year.
+                vm.SystemTime = vm.SystemTime.AddTicks(1);
+        }
     }
 }
