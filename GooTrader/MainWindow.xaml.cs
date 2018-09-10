@@ -23,7 +23,7 @@ namespace IBSampleApp
         private EReaderMonitorSignal signal = new EReaderMonitorSignal();
 
         // ib client for interaction with TWS
-        public IBClient ib;
+        IBClient ib;
         
         public MainWindow()
         {
