@@ -65,7 +65,7 @@ namespace IBSampleApp
             requestContract.Symbol = symbol;
             requestContract.SecType = sectype;
             requestContract.Exchange = primaryExchange;
-            ib.ClientSocket.reqContractDetails(ib.NextOrderId, requestContract);
+            ib.ClientSocket.reqContractDetails(TWS_GetOrderId(), requestContract);
         }
 
         /// <summary>
@@ -76,6 +76,18 @@ namespace IBSampleApp
         {
             MessageLogger.LogMessage("Requesting TWS Time");
             ib.ClientSocket.reqCurrentTime();
+        }
+
+        /// <summary>
+        /// Convenience function which automatically updates order ID.
+        /// For a single client, connection, it is sufficient to simply increment after each use.
+        /// For multiple clients, a more elaborate system is needed. See 10.3.1.1 of API 973.07
+        /// </summary>
+        /// <returns></returns>
+        public int TWS_GetOrderId()
+        {
+            ib.NextOrderId++;
+            return ib.NextOrderId;
         }
 
         #region TWS Event Handlers

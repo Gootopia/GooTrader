@@ -24,13 +24,13 @@ namespace IBSampleApp
 
         // ib client for interaction with TWS
         IBClient ib;
-        
+
         public MainWindow()
         {
             InitializeComponent();
 
             ib = new IBClient(signal);
-           
+
             // Top level data context is the viewmodel. 
             main.DataContext = vm;
 
