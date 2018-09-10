@@ -4,7 +4,7 @@ using System.Collections.Specialized;
 using System.Windows;
 using System;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     /// <summary>
     /// ViewModel class which exposes model data that can be bound to the View.

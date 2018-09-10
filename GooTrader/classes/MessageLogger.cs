@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     public enum LogMessageType { IB, ORDER, INFO };
 

@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Data;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
