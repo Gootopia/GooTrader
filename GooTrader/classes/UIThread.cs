@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Threading;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     /// <summary>
     /// Cosmetic class to make things more readable in the code

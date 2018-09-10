@@ -8,7 +8,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -23,7 +23,7 @@ namespace GooTrader
         private EReaderMonitorSignal signal = new EReaderMonitorSignal();
 
         // ib client for interaction with TWS
-        public IBClient ib;
+        IBClient ib;
         
         public MainWindow()
         {

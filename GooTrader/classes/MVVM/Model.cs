@@ -4,7 +4,7 @@ using System.Collections.Specialized;
 using System.Windows;
 using System;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     /// <summary>
     /// Model is the domain object for program data. It knows nothing of the ViewModel or the View.

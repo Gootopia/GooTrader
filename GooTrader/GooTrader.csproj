@@ -66,6 +66,67 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="backend\IBClient.cs" />
+    <Compile Include="backend\messages\AccountDownloadEndMessage.cs" />
+    <Compile Include="backend\messages\AccountSummaryEndMessage.cs" />
+    <Compile Include="backend\messages\AccountSummaryMessage.cs" />
+    <Compile Include="backend\messages\AccountUpdateMultiEndMessage.cs" />
+    <Compile Include="backend\messages\AccountUpdateMultiMessage.cs" />
+    <Compile Include="backend\messages\AccountValueMessage.cs" />
+    <Compile Include="backend\messages\AdvisorDataMessage.cs" />
+    <Compile Include="backend\messages\BondContractDetailsMessage.cs" />
+    <Compile Include="backend\messages\CommissionMessage.cs" />
+    <Compile Include="backend\messages\ConnectionStatusMessage.cs" />
+    <Compile Include="backend\messages\ContractDetailsEndMessage.cs" />
+    <Compile Include="backend\messages\ContractDetailsMessage.cs" />
+    <Compile Include="backend\messages\DailyPnLMessage.cs" />
+    <Compile Include="backend\messages\DailyPnLSingleMessage.cs" />
+    <Compile Include="backend\messages\DeepBookMessage.cs" />
+    <Compile Include="backend\messages\ErrorMessage.cs" />
+    <Compile Include="backend\messages\ExecutionMessage.cs" />
+    <Compile Include="backend\messages\FamilyCodesMessage.cs" />
+    <Compile Include="backend\messages\FundamentalsMessage.cs" />
+    <Compile Include="backend\messages\HeadTimestampMessage.cs" />
+    <Compile Include="backend\messages\HistogramDataMessage.cs" />
+    <Compile Include="backend\messages\HistoricalDataEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalDataMessage.cs" />
+    <Compile Include="backend\messages\HistoricalNewsEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalNewsMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickBidAsk.cs" />
+    <Compile Include="backend\messages\HistoricalTickBidAskEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickLastEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickLastMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickMessage.cs" />
+    <Compile Include="backend\messages\ManagedAccountsMessage.cs" />
+    <Compile Include="backend\messages\MarketDataMessage.cs" />
+    <Compile Include="backend\messages\MarketDataTypeMessage.cs" />
+    <Compile Include="backend\messages\MarketRuleMessage.cs" />
+    <Compile Include="backend\messages\MktDepthExchangesMessage.cs" />
+    <Compile Include="backend\messages\NewsArticleMessage.cs" />
+    <Compile Include="backend\messages\NewsProvidersMessage.cs" />
+    <Compile Include="backend\messages\OpenOrderMessage.cs" />
+    <Compile Include="backend\messages\OrderMessage.cs" />
+    <Compile Include="backend\messages\OrderStatusMessage.cs" />
+    <Compile Include="backend\messages\PositionMessage.cs" />
+    <Compile Include="backend\messages\PositionMultiEndMessage.cs" />
+    <Compile Include="backend\messages\PositionMultiMessage.cs" />
+    <Compile Include="backend\messages\RealTimeBarMessage.cs" />
+    <Compile Include="backend\messages\ScannerEndMessage.cs" />
+    <Compile Include="backend\messages\ScannerMessage.cs" />
+    <Compile Include="backend\messages\ScannerParametersMessage.cs" />
+    <Compile Include="backend\messages\SecurityDefinitionOptionParameterEndMessage.cs" />
+    <Compile Include="backend\messages\SecurityDefinitionOptionParameterMessage.cs" />
+    <Compile Include="backend\messages\SoftDollarTiersMessage.cs" />
+    <Compile Include="backend\messages\SymbolSamplesMessage.cs" />
+    <Compile Include="backend\messages\TickByTickAllLastMessage.cs" />
+    <Compile Include="backend\messages\TickByTickBidAskMessage.cs" />
+    <Compile Include="backend\messages\TickByTickMidPointMessage.cs" />
+    <Compile Include="backend\messages\TickNewsMessage.cs" />
+    <Compile Include="backend\messages\TickOptionMessage.cs" />
+    <Compile Include="backend\messages\TickPriceMessage.cs" />
+    <Compile Include="backend\messages\TickSizeMessage.cs" />
+    <Compile Include="backend\messages\UpdateAccountTimeMessage.cs" />
+    <Compile Include="backend\messages\UpdatePortfolioMessage.cs" />
     <Compile Include="classes\Converters\Converters.cs" />
     <Compile Include="classes\GooContract.cs" />
     <Compile Include="classes\MessageLogger.cs" />
@@ -113,6 +174,5 @@
       <Name>CSharpAPI</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

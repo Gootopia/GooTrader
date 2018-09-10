@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GooTrader.Properties
+namespace IBSampleApp.Properties
 {
 
 
