@@ -64,5 +64,6 @@ namespace GooTrader
                 // Tiny, tiny offset to force notify of change property, but won't change the year.
                 vm.SystemTime = vm.SystemTime.AddTicks(1);
         }
+
     }
 }

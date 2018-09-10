@@ -1,52 +1,41 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+
 namespace GooTrader
 {
-    public class GooContract : DependencyObject
+    public class GooContract : PropertyUpdater
     {
-        #region Dependency Properties
+        // Information specific to IB Platform
+        // Contract details for the given contract. Note that we must be specific enough when requesting details that
+        // the details apply only to a single tradable instrument (i.e: futures contract). At most, the contract
+        // differences should be limited to a single instrument with multiple expirations.
+        public IBApi.ContractDetails TWSContractDetails { get; set; }
 
-        // Contract description
-        #region Name
+        // Contract Descriptions ("S&P500", "Nasdaq", etc.)
+        private string _name;
         public string Name
         {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
+            get { return _name; }
+            set => UpdateProperty(ref _name, value);
         }
 
-        // Using a DependencyProperty as the backing store for Name.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty NameProperty =
-            DependencyProperty.Register("Name", typeof(string), typeof(GooContract), new PropertyMetadata("None"));
-        #endregion Name
-
-        // Contract Symbol
-        #region Symbol
-        public string Symbol
-        {
-            get { return (string)GetValue(SymbolProperty); }
-            set { SetValue(SymbolProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for Symbol.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty SymbolProperty =
-            DependencyProperty.Register("Symbol", typeof(string), typeof(GooContract), new PropertyMetadata(""));
-        #endregion symbol
-
-        // Contract expiration. For now we just pick the front month
-        #region Expiration
+        // Active expiration of a contract
+        private string _expiration;
         public string Expiration
         {
-            get { return (string)GetValue(ExpirationProperty); }
-            set { SetValue(ExpirationProperty, value); }
+            get { return _expiration; }
+            set => UpdateProperty(ref _expiration, value);
         }
 
-        // Using a DependencyProperty as the backing store for Expiration.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ExpirationProperty =
-            DependencyProperty.Register("Expiration", typeof(string), typeof(GooContract), new PropertyMetadata(null));
-        #endregion
-
-        #endregion Dependency Properties
+        // Contract Symbol ("ES", "NQ", etc.)
+        private string _symbol;
+        public string Symbol
+        {
+            get { return _symbol; }
+            set => UpdateProperty(ref _symbol, value);
+        }
     }
 }

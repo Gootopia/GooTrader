@@ -70,6 +70,7 @@
     <Compile Include="classes\GooContract.cs" />
     <Compile Include="classes\MessageLogger.cs" />
     <Compile Include="classes\MVVM\Model.cs" />
+    <Compile Include="classes\PropertyUpdater.cs" />
     <Compile Include="classes\Tws.cs" />
     <Compile Include="classes\UIThread.cs" />
     <Compile Include="classes\MVVM\ViewModel.cs" />

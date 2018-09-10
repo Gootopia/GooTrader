@@ -118,12 +118,26 @@ namespace GooTrader
             private set { clientSocket = value; }
         }
 
+        /// <summary>
+        /// Gets the next usable orderID. Autoincrements prior to access
+        /// Initially set by nextValidId event from TWS after connection.
+        /// </summary>
         public int NextOrderId
         {
             // Auto increment to always have a valid request id.
-            get { return nextOrderId++; }
+            get { return ++nextOrderId; }
             set { nextOrderId = value; }
         }
+
+        /// <summary>
+        /// Gets current usable orderiD without modification after access. GET only.
+        /// </summary>
+        public int CurrentOrderId
+        {
+            get { return nextOrderId; }
+            set { }
+        }
+
         #endregion Properties
 
         #region Actions

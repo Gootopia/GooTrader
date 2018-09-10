@@ -35,14 +35,18 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Contract" Binding="{Binding Name}"></DataGridTextColumn>
                         <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"></DataGridTextColumn>
-                    <DataGridTextColumn Header="Expiry" Binding="{Binding Expiration}"></DataGridTextColumn>
-                    </DataGrid.Columns>
+                        <DataGridTextColumn Header="Expiry" Binding="{Binding Expiration}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Bid" Binding="{Binding Bid}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Ask" Binding="{Binding Ask}"></DataGridTextColumn>
+                        <DataGridTextColumn Header="Last" Binding="{Binding Last}"></DataGridTextColumn>
+                </DataGrid.Columns>
                 </DataGrid>
             </GroupBox>
             <!-- User Control-->
             <StackPanel Grid.Row="0" Orientation="Horizontal">
                 <Button x:Name="btnConnect" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Click="btnConnect_Click"/>
-            <Button x:Name="btnReqData" Content="RequestData" VerticalAlignment="Top" Click="btnReqData_Click"/>
+                <Button x:Name="btnReqContracts" Content="ReqContracts" VerticalAlignment="Top" Click="btnReqContracts_Click"/>
+                <Button x:Name="btnReqData" Content="ReqData" VerticalAlignment="Top" Click="btnReqData_Click"/>
         </StackPanel>
         <StackPanel Grid.Row="3" Orientation="Horizontal">
             <Label x:Name="connectionStatus" Content="{Binding IsTwsConnected}"/>

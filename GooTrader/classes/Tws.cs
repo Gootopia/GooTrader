@@ -12,10 +12,23 @@ namespace GooTrader
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Convenience classes for TWS Contract Properties
+        /// </summary>
+        #region TWS Information Classes
+        // Defines
         public static class Exchanges
         {
             public static string Globex = "GLOBEX";
+            //TODO: Add GetPrimaryExchange(ticker) to pick the right exchange for a given symbol as there may be multiple
         }
+
+        // Allowed security types (STK, FUT, etc.)
+        public static class SecType
+        {
+            public static string Future = "FUT";
+        }
+        #endregion
 
         /// <summary>
         /// Open a connection to TWS platform
@@ -40,6 +53,19 @@ namespace GooTrader
             {
                 throw new Exception();
             }
+        }
+
+        /// <summary>
+        /// Request full contract details based on some initial specifications.
+        /// Enough info should be provided so that only a single instrument type (FUT,Stock) will be returned.
+        /// </summary>
+        public void TWS_RequestContractDetails(string symbol, string sectype, string primaryExchange)
+        {
+            IBApi.Contract requestContract = new Contract();
+            requestContract.Symbol = symbol;
+            requestContract.SecType = sectype;
+            requestContract.Exchange = primaryExchange;
+            ib.ClientSocket.reqContractDetails(ib.NextOrderId, requestContract);
         }
 
         /// <summary>
@@ -95,25 +121,32 @@ namespace GooTrader
         // TWS response for a single instance of contractDetails for a given request
         private void Ib_ContractDetails(int reqId, ContractDetails contractDetails)
         {
-            var contractName = contractDetails.LongName + contractDetails.ContractMonth;
-            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", reqId.ToString(), contractName));
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}_{2}_{3}", 
+                reqId.ToString(),
+                contractDetails.Summary.SecType,
+                contractDetails.Summary.Symbol,
+                contractDetails.ContractMonth));
 
             // Because contract is bound in Viewmodel, it must be created on the UI thread.
-            // Also, because thread operations
+            // Also, because of threading, we do all the code for this update in the same spot
             UIThread.Update(() =>
             {
+                // TODO: Key should only use the primary exchange. Need a function to determine this for a given instrument
                 var contractKey = contractDetails.MarketName + "_" + contractDetails.ValidExchanges;
                 GooContract currentContract;
 
+                // Contract is created only for first expiration received.
+                // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
                 if (model.Contracts.ContainsKey(contractKey) == false)
                 {
                     currentContract = new GooContract();
-                    currentContract.Name = contractDetails.LongName;
-                    currentContract.Symbol = contractDetails.MarketName;
+                    currentContract.TWSContractDetails = contractDetails;
 
                     // TWS returns contracts in calendar order (front month first).
                     // First month is normally highest volume, so we'll use that for now
                     currentContract.Expiration = contractDetails.ContractMonth;
+                    currentContract.Name = contractDetails.LongName;
+                    currentContract.Symbol = contractDetails.MarketName;
 
                     // Add this contract information to the model as well as the view model
                     model.Contracts.Add(contractKey, currentContract);
