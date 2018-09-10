@@ -84,17 +84,6 @@ namespace IBSampleApp
             MessageLogger.LogMessage("Connection Lost!");
         }
 
-        // Valid ID signal from TWS implies TWS is ready to recieve commands
-        private void Ib_NextValidId(messages.ConnectionStatusMessage obj)
-        {
-            ib.NextOrderId = 0;
-            // Access on viewmodel is prohibited outside UI thread unless using Dispatcher
-            UIThread.Update(() => vm.IsTwsConnected = ib.ClientSocket.IsConnected());
-
-            // perform any actions needed after a connection has occurred.
-            TWS_Connected();
-        }
-
         // Error message handler.
         // Handles both standard error codes as well as exceptions
         private void Ib_Error(int id, int errorCode, string errorMsg, Exception exception)
@@ -112,6 +101,17 @@ namespace IBSampleApp
             MessageLogger.LogMessage(errMsg);
         }
 
+        // Valid ID signal from TWS implies TWS is ready to recieve commands
+        private void Ib_NextValidId(int id)
+        {
+            ib.NextOrderId = id;
+            // Access on viewmodel is prohibited outside UI thread unless using Dispatcher
+            UIThread.Update(() => vm.IsTwsConnected = ib.ClientSocket.IsConnected());
+
+            // perform any actions needed after a connection has occurred.
+            TWS_Connected();
+        }
+
         // TWS has finished with all details for ContractDetailsRequest (all expirations, etc.)
         private void Ib_ContractDetailsEnd(int reqId)
         {
@@ -119,37 +119,36 @@ namespace IBSampleApp
         }
 
         // TWS response for a single instance of contractDetails for a given request
-        private void Ib_ContractDetails(messages.ContractDetailsMessage msg_cd)
+        private void Ib_ContractDetails(int reqId, ContractDetails contractDetails)
         {
-            ContractDetails cd = msg_cd.ContractDetails;
-
             MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}_{2}_{3}", 
-                msg_cd.RequestId.ToString(),
-                cd.Contract.SecType,
-                cd.Contract.Symbol,
-                cd.ContractMonth));
+                reqId.ToString(),
+                contractDetails.Summary.SecType,
+                contractDetails.Summary.Symbol,
+                contractDetails.ContractMonth));
 
             // Because contract is bound in Viewmodel, it must be created on the UI thread.
             // Also, because of threading, we do all the code for this update in the same spot
             UIThread.Update(() =>
             {
                 // TODO: Key should only use the primary exchange. Need a function to determine this for a given instrument
-                var contractKey = cd.Contract.SecType+"_" + cd.MarketName + "_" + cd.ValidExchanges;
+                var contractKey = contractDetails.MarketName + "_" + contractDetails.ValidExchanges;
+                GooContract currentContract;
 
                 // Contract is created only for first expiration received.
                 // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
                 if (model.Contracts.ContainsKey(contractKey) == false)
                 {
-                    var currentContract = new GooContract();
-                    currentContract.TWSContractDetails = cd;
+                    currentContract = new GooContract();
+                    currentContract.TWSContractDetails = contractDetails;
 
                     // TWS returns contracts in calendar order (front month first).
                     // First month is normally highest volume, so we'll use that for now
-                    currentContract.Expiration = cd.ContractMonth;
-                    currentContract.Name = cd.LongName;
-                    currentContract.Symbol = cd.MarketName;
+                    currentContract.Expiration = contractDetails.ContractMonth;
+                    currentContract.Name = contractDetails.LongName;
+                    currentContract.Symbol = contractDetails.MarketName;
 
-                    // Add this contract information to the model as well as the viewmodel
+                    // Add this contract information to the model as well as the view model
                     model.Contracts.Add(contractKey, currentContract);
                     vm.Contracts.Add(currentContract);
                 }

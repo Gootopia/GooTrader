@@ -16,18 +16,7 @@ namespace IBSampleApp
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        // String version
         public void UpdateProperty(ref string property, string value, [CallerMemberName]string propertyName = "")
-        {
-            if (property != value)
-            {
-                property = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        // float version
-        public void UpdateProperty(ref float property, float value, [CallerMemberName]string propertyName="")
         {
             if (property != value)
             {
