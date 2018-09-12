@@ -12,7 +12,7 @@ namespace IBSampleApp
     /// ViewModel class which exposes model data that can be bound to the View.
     /// If you want something in the UI, put it here and bind it in XAML. No Exceptions!
     /// </summary>
-    public class ViewModel : DependencyObject
+    public class ViewModel : PropertyUpdater
     {
         // Available contracts
         public ObservableCollection<GooContract> Contracts { get; set; }
@@ -20,31 +20,21 @@ namespace IBSampleApp
         // Message Log
         public ObservableCollection<LogMessage> Messages { get; set; }
 
-        // Connection status to TWS
-        #region IsTwsConnected
+        // Connection Status to TWS
+        private bool _istwsconnected;
         public bool IsTwsConnected
         {
-            get { return (bool)GetValue(IsTwsConnectedProperty); }
-            set { SetValue(IsTwsConnectedProperty, value); }
+            get { return _istwsconnected; }
+            set { UpdateProperty(ref _istwsconnected, value); }
         }
-
-        // Using a DependencyProperty as the backing store for IsTwsConnected.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsTwsConnectedProperty =
-            DependencyProperty.Register("IsTwsConnected", typeof(bool), typeof(ViewModel), new PropertyMetadata(false));
-        #endregion IsTwsConnected
 
         // System Time for running clock display
-        #region SystemTime
-         public DateTime SystemTime
+        private DateTime _systemtime;
+        public DateTime SystemTime
         {
-            get { return (DateTime)GetValue(SystemTimeProperty); }
-            set { SetValue(SystemTimeProperty, value); }
+            get { return _systemtime; }
+            set { UpdateProperty(ref _systemtime, value); }
         }
-
-        // Using a DependencyProperty as the backing store for SystemTime.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty SystemTimeProperty =
-            DependencyProperty.Register("SystemTime", typeof(DateTime), typeof(ViewModel), new PropertyMetadata(new DateTime(1,1,1)));
-        #endregion
 
         #region Constructor
         public ViewModel()

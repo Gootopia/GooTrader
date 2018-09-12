@@ -150,8 +150,8 @@ namespace IBSampleApp
         private void Ib_NextValidId(messages.ConnectionStatusMessage obj)
         {
             ib.NextOrderId = 0;
-            // Access on viewmodel is prohibited outside UI thread unless using Dispatcher
-            UIThread.Update(() => vm.IsTwsConnected = ib.ClientSocket.IsConnected());
+
+            vm.IsTwsConnected = ib.ClientSocket.IsConnected();
 
             // perform any actions needed after a connection has occurred.
             TWS_Connected();
@@ -184,36 +184,30 @@ namespace IBSampleApp
         private void Ib_ContractDetails(messages.ContractDetailsMessage msg_cd)
         {
             ContractDetails cd = msg_cd.ContractDetails;
+            string contractKey = TWS_ContractKey(cd.Contract);
 
-            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), TWS_ContractKey(cd.Contract)));
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey));
 
-            // Because contract is bound in Viewmodel, it must be created on the UI thread.
-            // Also, because of threading, we do all the code for this update in the same spot
-            UIThread.Update(() =>
+            // Contract is created only for first expiration received.
+            // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
+            if (model.Contracts.ContainsKey(contractKey) == false)
             {
-                string contractKey = TWS_ContractKey(cd.Contract);
+                var currentContract = new GooContract();
+                currentContract.TWSContractDetails = cd;
 
-                // Contract is created only for first expiration received.
-                // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
-                if (model.Contracts.ContainsKey(contractKey) == false)
-                {
-                    var currentContract = new GooContract();
-                    currentContract.TWSContractDetails = cd;
+                // TWS returns contracts in calendar order (front month first).
+                // First month is normally highest volume, so we'll use that for now
+                currentContract.Expiration = cd.ContractMonth;
+                currentContract.Name = cd.LongName;
+                currentContract.Symbol = cd.MarketName;
 
-                    // TWS returns contracts in calendar order (front month first).
-                    // First month is normally highest volume, so we'll use that for now
-                    currentContract.Expiration = cd.ContractMonth;
-                    currentContract.Name = cd.LongName;
-                    currentContract.Symbol = cd.MarketName;
+                // Add this contract information to the model as well as the viewmodel
+                model.Contracts.Add(contractKey, currentContract);
+                vm.Contracts.Add(currentContract);
 
-                    // Add this contract information to the model as well as the viewmodel
-                    model.Contracts.Add(contractKey, currentContract);
-                    vm.Contracts.Add(currentContract);
-
-                    // submit request for tick bid/ask/last data for this contract
-                    TWS_RequestTickData(cd.Contract);
-                }
-            });
+                // submit request for tick bid/ask/last data for this contract
+                TWS_RequestTickData(cd.Contract);
+            }
         }
 
         // TWS response with request for server time. Used to get local offset
@@ -228,6 +222,23 @@ namespace IBSampleApp
             var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms", 
                 twsTime.ToLongTimeString(), localTime.ToLongTimeString(), model.ServerTimeOffset.TotalMilliseconds.ToString());
             MessageLogger.LogMessage(msg);
+        }
+
+        // TWS tick data message for ReqTickByTickData(): Bid/Ask prices
+        private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
+        {
+            string contractkey = model.DataRequests[bidask.ReqId];
+            GooContract c = model.Contracts[contractkey];
+            c.Bid = bidask.BidPrice;
+            c.Ask = bidask.AskPrice;
+        }
+
+        // TWS tick data message for ReqTickByTickData(). Last price
+        private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
+        {
+            string contractkey = model.DataRequests[last.ReqId];
+            GooContract c = model.Contracts[contractkey];
+            c.Last = last.Price;
         }
         #endregion TWS Event Handlers
     }

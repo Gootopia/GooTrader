@@ -57,21 +57,6 @@ namespace IBSampleApp
             sysClock.Start();
         }
 
-        private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
-        {
-            string contractkey = model.DataRequests[bidask.ReqId];
-            GooContract c = model.Contracts[contractkey];
-            c.Bid = bidask.BidPrice;
-            c.Ask = bidask.AskPrice;
-        }
-
-        private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
-        {
-            string contractkey = model.DataRequests[last.ReqId];
-            GooContract c = model.Contracts[contractkey];
-            c.Last = last.Price;
-        }
-
         // 1 second tick timer for updating clock
         private void SysClock_Tick(object sender, EventArgs e)
         {
