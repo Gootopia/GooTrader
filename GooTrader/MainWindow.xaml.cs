@@ -8,6 +8,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
+// Use default namespace so we don't have to rename stuff when updating to a new TWS API
 namespace IBSampleApp
 {
     /// <summary>
@@ -45,6 +46,8 @@ namespace IBSampleApp
             ib.ContractDetails += Ib_ContractDetails;
             ib.ContractDetailsEnd += Ib_ContractDetailsEnd;
             ib.CurrentTime += Ib_CurrentTime;
+            ib.tickByTickAllLast += Ib_tickByTickAllLast;
+            ib.tickByTickBidAsk += Ib_tickByTickBidAsk;
             #endregion Add Event Handlers
 
             // System timer for clock
@@ -52,6 +55,21 @@ namespace IBSampleApp
             sysClock.Interval = TimeSpan.FromSeconds(1);
             sysClock.Tick += SysClock_Tick;
             sysClock.Start();
+        }
+
+        private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
+        {
+            string contractkey = model.DataRequests[bidask.ReqId];
+            GooContract c = model.Contracts[contractkey];
+            c.Bid = bidask.BidPrice;
+            c.Ask = bidask.AskPrice;
+        }
+
+        private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
+        {
+            string contractkey = model.DataRequests[last.ReqId];
+            GooContract c = model.Contracts[contractkey];
+            c.Last = last.Price;
         }
 
         // 1 second tick timer for updating clock

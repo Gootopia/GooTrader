@@ -39,20 +39,20 @@ namespace IBSampleApp
         }
 
         // Contract Price Info
-        private float _bid;
-        private float _ask;
-        private float _last;
-        public float Bid
+        private double _bid;
+        private double _ask;
+        private double _last;
+        public double Bid
         {
             get { return _bid; }
             set => UpdateProperty(ref _bid, value);
         }
-        public float Ask
+        public double Ask
         {
             get { return _ask; }
             set => UpdateProperty(ref _ask, value);
         }
-        public float Last
+        public double Last
         {
             get { return _last; }
             set => UpdateProperty(ref _last, value);
@@ -60,9 +60,9 @@ namespace IBSampleApp
 
         public GooContract()
         {
-            Bid = 0.0f;
-            Ask = 0.0f;
-            Last = 0.0f;
+            Bid = 0.0;
+            Ask = 1.0;
+            Last = 2.0;
         }
- }
+    }
 }

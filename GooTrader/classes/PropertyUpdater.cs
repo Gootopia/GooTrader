@@ -8,10 +8,10 @@ namespace IBSampleApp
     /// Simply derive from Property updater, create a property as normal and use the UpdateProperty call in the settor.
     /// NOTE: there must be an UpdateProperty method for each type!
     /// </summary>
-    public class PropertyUpdater
+    public class PropertyUpdater : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        public void NotifyPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -22,17 +22,17 @@ namespace IBSampleApp
             if (property != value)
             {
                 property = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged(propertyName);
             }
         }
 
-        // float version
-        public void UpdateProperty(ref float property, float value, [CallerMemberName]string propertyName="")
+        // double version
+        public void UpdateProperty(ref double property, double value, [CallerMemberName]string propertyName="")
         {
             if (property != value)
             {
                 property = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged(propertyName);
             }
         }
 

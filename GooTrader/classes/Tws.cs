@@ -16,7 +16,7 @@ namespace IBSampleApp
         /// Convenience classes for TWS Contract Properties
         /// </summary>
         #region TWS Information Classes
-        // Defines
+        // Defines the various exchanges.
         public static class Exchanges
         {
             public static string Globex = "GLOBEX";
@@ -28,8 +28,16 @@ namespace IBSampleApp
         {
             public static string Future = "FUT";
         }
+
+        // Data types for Top market data (Level 1)
+        public static class TickType
+        {
+            public static string Last = "Last";
+            public static string BidAsk = "BidAsk";
+        }
         #endregion
 
+        #region TWS Methods
         /// <summary>
         /// Open a connection to TWS platform
         /// </summary>
@@ -90,6 +98,48 @@ namespace IBSampleApp
             return ib.NextOrderId;
         }
 
+        /// <summary>
+        /// Convenience wrapper to simply return the current order id without auto-increment.
+        /// </summary>
+        /// <returns></returns>
+        public int TWS_GetCurrentOrderId()
+        {
+            return ib.NextOrderId;
+        }
+
+        /// <summary>
+        /// Generate a unique key based on contract information
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public string TWS_ContractKey(Contract c)
+        {
+            string contractkey = string.Empty;
+
+            if(c != null)
+            {
+                contractkey = String.Format("{0}_{1}_{2}", c.SecType,c.Symbol,c.Exchange);
+            }
+            return contractkey;
+        }
+
+        /// <summary>
+        /// Request tick market data (Level I bid/ask/last)
+        /// </summary>
+        /// <param name="cd"></param>
+        public void TWS_RequestTickData(Contract c)
+        {
+            int id_last = TWS_GetOrderId();
+            int id_bidask = TWS_GetOrderId();
+            string contractKey = TWS_ContractKey(c);
+            model.DataRequests.Add(id_last, contractKey);
+            model.DataRequests.Add(id_bidask, contractKey);
+            ib.ClientSocket.reqTickByTickData(id_last, c, TickType.Last, 0, false);
+            ib.ClientSocket.reqTickByTickData(id_bidask, c, TickType.BidAsk, 0, false);
+        }
+
+        #endregion TWS Methods
+
         #region TWS Event Handlers
         private void Ib_ConnectionClosed()
         {
@@ -135,18 +185,13 @@ namespace IBSampleApp
         {
             ContractDetails cd = msg_cd.ContractDetails;
 
-            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}_{2}_{3}", 
-                msg_cd.RequestId.ToString(),
-                cd.Contract.SecType,
-                cd.Contract.Symbol,
-                cd.ContractMonth));
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), TWS_ContractKey(cd.Contract)));
 
             // Because contract is bound in Viewmodel, it must be created on the UI thread.
             // Also, because of threading, we do all the code for this update in the same spot
             UIThread.Update(() =>
             {
-                // TODO: Key should only use the primary exchange. Need a function to determine this for a given instrument
-                var contractKey = cd.Contract.SecType+"_" + cd.MarketName + "_" + cd.ValidExchanges;
+                string contractKey = TWS_ContractKey(cd.Contract);
 
                 // Contract is created only for first expiration received.
                 // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
@@ -164,6 +209,9 @@ namespace IBSampleApp
                     // Add this contract information to the model as well as the viewmodel
                     model.Contracts.Add(contractKey, currentContract);
                     vm.Contracts.Add(currentContract);
+
+                    // submit request for tick bid/ask/last data for this contract
+                    TWS_RequestTickData(cd.Contract);
                 }
             });
         }

@@ -27,7 +27,6 @@ namespace IBSampleApp
 
         private void btnReqData_Click(object sender, RoutedEventArgs e)
         {
-
         }
     }
 }

@@ -18,10 +18,18 @@ namespace IBSampleApp
         // Contracts list. Keys are "Ticker_PrimaryExchange"
         public Dictionary<string, GooContract> Contracts { get; set; }
 
+        // Data request lookup. Used for indexing tick data streams
+        // Stores which contractkey (TWS_ContractKey) for a given tick data reqId since that is what is returned in the tick events
+        // This is a two-step process:
+        // 1) Index the contract key given the data request Id
+        // 2) Index the contract given the contract key
+        public Dictionary<int, string> DataRequests { get; set; }
+
         #region Constructor
         public Model()
         {
             Contracts = new Dictionary<string, GooContract>();
+            DataRequests = new Dictionary<int, string>();
         }
         #endregion Constructor
     }
