@@ -5,8 +5,7 @@ using System.Windows.Threading;
 namespace IBSampleApp
 {
     /// <summary>
-    /// Used to execute UI operations outside the UI thread. Only needed for DependencyObjects.
-    /// Properties that use the INotifyPropertyChanged (i.e: PropertyUpdater) can just assign as normal.
+    /// Cosmetic class to make things more readable in the code
     /// </summary>
     static class UIThread
     {
