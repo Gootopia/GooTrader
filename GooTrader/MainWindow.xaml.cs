@@ -48,6 +48,7 @@ namespace IBSampleApp
             ib.CurrentTime += Ib_CurrentTime;
             ib.tickByTickAllLast += Ib_tickByTickAllLast;
             ib.tickByTickBidAsk += Ib_tickByTickBidAsk;
+            ib.HeadTimestamp += Ib_HeadTimestamp;
             #endregion Add Event Handlers
 
             // System timer for clock
@@ -57,19 +58,9 @@ namespace IBSampleApp
             sysClock.Start();
         }
 
-        private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
+        private void Ib_HeadTimestamp(messages.HeadTimestampMessage obj)
         {
-            string contractkey = model.DataRequests[bidask.ReqId];
-            GooContract c = model.Contracts[contractkey];
-            c.Bid = bidask.BidPrice;
-            c.Ask = bidask.AskPrice;
-        }
-
-        private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
-        {
-            string contractkey = model.DataRequests[last.ReqId];
-            GooContract c = model.Contracts[contractkey];
-            c.Last = last.Price;
+            throw new NotImplementedException();
         }
 
         // 1 second tick timer for updating clock
@@ -82,6 +73,5 @@ namespace IBSampleApp
                 // Tiny, tiny offset to force notify of change property, but won't change the year.
                 vm.SystemTime = vm.SystemTime.AddTicks(1);
         }
-
     }
 }
