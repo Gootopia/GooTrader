@@ -8,12 +8,20 @@ namespace IBSampleApp
 {
     public class GooContract : PropertyUpdater
     {
+        // Properties below don't need UpdateProperty in the settor as ViewModel doesn't access them
+        #region Standard Properties
         // Information specific to IB Platform
         // Contract details for the given contract. Note that we must be specific enough when requesting details that
         // the details apply only to a single tradable instrument (i.e: futures contract). At most, the contract
         // differences should be limited to a single instrument with multiple expirations.
         public IBApi.ContractDetails TWSContractDetails { get; set; }
 
+        // String with starting
+        public string HeadTimeStamp { get; set; }
+        #endregion
+
+        // Properties below should call UpdateProperty() in the settor as they could be referenced by the ViewModel
+        #region Properties with UpdateNotify
         // Contract Descriptions ("S&P500", "Nasdaq", etc.)
         private string _name;
         public string Name
@@ -57,6 +65,7 @@ namespace IBSampleApp
             get { return _last; }
             set => UpdateProperty(ref _last, value);
         }
+        #endregion
 
         public GooContract()
         {

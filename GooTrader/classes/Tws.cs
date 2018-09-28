@@ -132,8 +132,8 @@ namespace IBSampleApp
             int id_last = TWS_GetOrderId();
             int id_bidask = TWS_GetOrderId();
             string contractKey = TWS_ContractKey(c);
-            model.DataRequests.Add(id_last, contractKey);
-            model.DataRequests.Add(id_bidask, contractKey);
+            TWS_AddContractRequest(id_last, c);
+            TWS_AddContractRequest(id_bidask, c);
             ib.ClientSocket.reqTickByTickData(id_last, c, TickType.Last, 0, false);
             ib.ClientSocket.reqTickByTickData(id_bidask, c, TickType.BidAsk, 0, false);
         }
@@ -141,7 +141,38 @@ namespace IBSampleApp
         public void TWS_RequestHistoricalData(Contract c)
         {
             int id_historical = TWS_GetOrderId();
+            TWS_AddContractRequest(id_historical, c);
             ib.ClientSocket.reqHeadTimestamp(id_historical, c, "TRADES", 1, 1);
+        }
+
+        // Associate a contract with a particular data request
+        private void TWS_AddContractRequest(int reqId, Contract c)
+        {
+            string contractKey = TWS_ContractKey(c);
+
+            // Need to add this request so we can look up what contract is related to the reqId when we receive the events
+            if(model.DataRequests.ContainsKey(reqId) == false)
+            {
+                model.DataRequests.Add(reqId, contractKey);
+            } else
+            {
+                // reqID are unique so it shouldn't be here. If so, we need to investigate further.
+                throw new NotImplementedException();
+            }
+        }
+
+        // Remove the association between a contract and the data request
+        private void TWS_DeleteContractRequest(int reqId)
+        {
+            model.DataRequests.Remove(reqId);
+        }
+
+        // Get the contract associated with a given request (if any)
+        private GooContract TWS_GetDataRequestContract(int reqId)
+        {
+            string contractKey = model.DataRequests[reqId];
+            GooContract c = model.Contracts[contractKey];
+            return c;
         }
         #endregion TWS Methods
 
@@ -212,7 +243,12 @@ namespace IBSampleApp
 
                 // submit request for tick bid/ask/last data for this contract
                 TWS_RequestTickData(cd.Contract);
+                // Also submit a request for historical data
+                TWS_RequestHistoricalData(cd.Contract);
             }
+
+            //
+            TWS_DeleteContractRequest(msg_cd.RequestId);
         }
 
         // TWS response with request for server time. Used to get local offset
@@ -232,8 +268,7 @@ namespace IBSampleApp
         // TWS message response to real-time data: Bid/Ask update
         private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
         {
-            string contractkey = model.DataRequests[bidask.ReqId];
-            GooContract c = model.Contracts[contractkey];
+            GooContract c = TWS_GetDataRequestContract(bidask.ReqId);
             c.Bid = bidask.BidPrice;
             c.Ask = bidask.AskPrice;
         }
@@ -241,8 +276,7 @@ namespace IBSampleApp
         // TWS message response to real-time data: Last update
         private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
         {
-            string contractkey = model.DataRequests[last.ReqId];
-            GooContract c = model.Contracts[contractkey];
+            GooContract c = TWS_GetDataRequestContract(last.ReqId);
             c.Last = last.Price;
         }
         #endregion TWS Event Handlers

@@ -58,9 +58,11 @@ namespace IBSampleApp
             sysClock.Start();
         }
 
-        private void Ib_HeadTimestamp(messages.HeadTimestampMessage obj)
+        private void Ib_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
         {
-            throw new NotImplementedException();
+            GooContract c = TWS_GetDataRequestContract(headTimeStamp.ReqId);
+            c.HeadTimeStamp = headTimeStamp.HeadTimestamp;
+            TWS_DeleteContractRequest(headTimeStamp.ReqId);
         }
 
         // 1 second tick timer for updating clock
