@@ -21,8 +21,8 @@ namespace IBSampleApp
 
         private void btnReqContracts_Click(object sender, RoutedEventArgs e)
         {
-            TWS_RequestContractDetails("ES", "FUT", Exchanges.Globex);
-            TWS_RequestContractDetails("NQ", "FUT", Exchanges.Globex);
+            TWS_RequestContractDetails("ES", "FUT", TWSInfo.TWS_Exchanges.Globex);
+            TWS_RequestContractDetails("NQ", "FUT", TWSInfo.TWS_Exchanges.Globex);
         }
 
         private void btnReqData_Click(object sender, RoutedEventArgs e)

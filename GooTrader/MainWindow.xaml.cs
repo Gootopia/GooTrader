@@ -8,6 +8,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
+
 // Use default namespace so we don't have to rename stuff when updating to a new TWS API
 namespace IBSampleApp
 {
@@ -25,6 +26,8 @@ namespace IBSampleApp
 
         // ib client for interaction with TWS
         IBClient ib;
+
+        public FSM_DownloadHistoricalData fsm_hd = new FSM_DownloadHistoricalData();
 
         public MainWindow()
         {
@@ -49,6 +52,9 @@ namespace IBSampleApp
             ib.tickByTickAllLast += Ib_tickByTickAllLast;
             ib.tickByTickBidAsk += Ib_tickByTickBidAsk;
             ib.HeadTimestamp += Ib_HeadTimestamp;
+            ib.HistoricalData += Ib_HistoricalData;
+            ib.HistoricalDataEnd += Ib_HistoricalDataEnd;
+            ib.HistoricalDataUpdate += Ib_HistoricalDataUpdate;
             #endregion Add Event Handlers
 
             // System timer for clock
@@ -56,13 +62,25 @@ namespace IBSampleApp
             sysClock.Interval = TimeSpan.FromSeconds(1);
             sysClock.Tick += SysClock_Tick;
             sysClock.Start();
+
+            fsm_hd.Initialize();
         }
 
-        private void Ib_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
+        private void Ib_HistoricalDataUpdate(messages.HistoricalDataMessage obj)
         {
-            GooContract c = TWS_GetDataRequestContract(headTimeStamp.ReqId);
-            c.HeadTimeStamp = headTimeStamp.HeadTimestamp;
-            TWS_DeleteContractRequest(headTimeStamp.ReqId);
+            throw new NotImplementedException();
+        }
+
+        private void Ib_HistoricalDataEnd(messages.HistoricalDataEndMessage hDataEnd)
+        {
+            GooContract c = TWS_GetDataRequestContract(hDataEnd.RequestId);
+            //throw new NotImplementedException();
+        }
+
+        private void Ib_HistoricalData(messages.HistoricalDataMessage hdata)
+        {
+            var msg = String.Format("Time={0},Open={1},High={2},Low={3},Close={4}", hdata.Date, hdata.Open, hdata.High, hdata.Low, hdata.Close);
+            MessageLogger.LogMessage(msg);
         }
 
         // 1 second tick timer for updating clock

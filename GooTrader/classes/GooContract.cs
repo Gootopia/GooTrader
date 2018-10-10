@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System;
 
 namespace IBSampleApp
 {
@@ -16,8 +17,10 @@ namespace IBSampleApp
         // differences should be limited to a single instrument with multiple expirations.
         public IBApi.ContractDetails TWSContractDetails { get; set; }
 
-        // String with starting
-        public string HeadTimeStamp { get; set; }
+        // Timestamp of the furthest out data that is available for this contract
+        public string HeadTimeStampString { get; set; }
+        // Keeps track of where we are in the data request. We download one day at a time and need a separate request for each.
+        public DateTime HistDataRequestDateTime { get; set; }
         #endregion
 
         // Properties below should call UpdateProperty() in the settor as they could be referenced by the ViewModel

@@ -12,31 +12,6 @@ namespace IBSampleApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Convenience classes for TWS Contract Properties
-        /// </summary>
-        #region TWS Information Classes
-        // Defines the various exchanges.
-        public static class Exchanges
-        {
-            public static string Globex = "GLOBEX";
-            //TODO: Add GetPrimaryExchange(ticker) to pick the right exchange for a given symbol as there may be multiple
-        }
-
-        // Allowed security types (STK, FUT, etc.)
-        public static class SecType
-        {
-            public static string Future = "FUT";
-        }
-
-        // Data types for Top market data (Level 1)
-        public static class TickType
-        {
-            public static string Last = "Last";
-            public static string BidAsk = "BidAsk";
-        }
-        #endregion
-
         #region TWS Methods
         /// <summary>
         /// Open a connection to TWS platform
@@ -134,15 +109,21 @@ namespace IBSampleApp
             string contractKey = TWS_ContractKey(c);
             TWS_AddContractRequest(id_last, c);
             TWS_AddContractRequest(id_bidask, c);
-            ib.ClientSocket.reqTickByTickData(id_last, c, TickType.Last, 0, false);
-            ib.ClientSocket.reqTickByTickData(id_bidask, c, TickType.BidAsk, 0, false);
+            ib.ClientSocket.reqTickByTickData(id_last, c, TWSInfo.TWS_TickType.Last, 0, false);
+            ib.ClientSocket.reqTickByTickData(id_bidask, c, TWSInfo.TWS_TickType.BidAsk, 0, false);
         }
 
+        /// <summary>
+        /// Submit request for historical data
+        /// </summary>
+        /// <param name="c"></param>
         public void TWS_RequestHistoricalData(Contract c)
         {
             int id_historical = TWS_GetOrderId();
             TWS_AddContractRequest(id_historical, c);
-            ib.ClientSocket.reqHeadTimestamp(id_historical, c, "TRADES", 1, 1);
+            
+            // Find out how much data is available for given contract. Once we know that, we can submit for data in "chunks" (due to TWS data limits)
+            ib.ClientSocket.reqHeadTimestamp(id_historical, c, TWSInfo.TWS_WhatToShow.Trades , TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
         }
 
         // Associate a contract with a particular data request
@@ -278,6 +259,28 @@ namespace IBSampleApp
         {
             GooContract c = TWS_GetDataRequestContract(last.ReqId);
             c.Last = last.Price;
+        }
+
+        // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
+        private void Ib_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
+        {
+            GooContract c = TWS_GetDataRequestContract(headTimeStamp.ReqId);
+            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
+                        
+            // Delete the request associated with the timestamp. We'll create others for each chunk of historical data
+            TWS_DeleteContractRequest(headTimeStamp.ReqId);
+            
+            int histDataReqId = TWS_GetOrderId();
+
+            // Start requesting historical data 1 day at a time. We'll go until we hit the head time stamp.
+            c.HistDataRequestDateTime = DateTime.Now;
+            var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
+            // Add a new data request
+            TWS_AddContractRequest(histDataReqId, c.TWSContractDetails.Contract);
+
+            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
+            ib.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
+                TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
         }
         #endregion TWS Event Handlers
     }
