@@ -136,7 +136,8 @@
     <Compile Include="classes\MVVM\Model.cs" />
     <Compile Include="classes\OHLCData.cs" />
     <Compile Include="classes\PropertyUpdater.cs" />
-    <Compile Include="classes\State Machines\FSM.cs" />
+    <Compile Include="classes\State Machines\FiniteStateMachine.cs" />
+    <Compile Include="classes\State Machines\FSM_DownloadHistoricalData.cs" />
     <Compile Include="classes\Tws.cs" />
     <Compile Include="classes\TwsInfo.cs" />
     <Compile Include="classes\UIThread.cs" />
