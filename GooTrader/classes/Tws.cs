@@ -1,5 +1,6 @@
 ﻿using IBApi;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -7,207 +8,131 @@ using System.Windows;
 
 namespace IBSampleApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    // Singleton TWS class
+    public static class TWS
     {
-        #region TWS Methods
-        /// <summary>
-        /// Open a connection to TWS platform
-        /// </summary>
-        /// <returns></returns>
-        public void TWS_Connect()
+        // Offset between local and TWS time
+        public static TimeSpan ServerTimeOffset;
+
+        // Reader for passing message between this app and TWS host
+        private readonly static EReaderMonitorSignal signal = new EReaderMonitorSignal();
+        
+        // ib client for interaction with TWS
+        private readonly static IBClient ibclient;
+
+        // Data request lookup. Used for indexing tick data streams
+        // Stores which contractkey (TWS_ContractKey) for a given tick data reqId since that is what is returned in the tick events
+        // This is a two-step process:
+        // 1) Index the contract key given the data request Id
+        // 2) Index the contract given the contract key
+        private static Dictionary<int, string> datarequests = new Dictionary<int, string>();
+
+        #region Constructor
+        static TWS()
         {
-            try
-            {
-                // Open a connection to TWS
-                ib.ClientId = 0;
-                ib.ClientSocket.eConnect("127.0.0.1", 7497, 0);
+            ibclient = new IBClient(signal);
 
-                // Start an IB reader thread
-                var reader = new EReader(ib.ClientSocket, signal);
-                reader.Start();
+            ibclient.NextValidId += Ibclient_NextValidId;
+            ibclient.ConnectionClosed += Ibclient_ConnectionClosed;
+            ibclient.Error += Ibclient_Error;
 
-                // background thread to process TWS messages
-                new Thread(() => { while (ib.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
-            }
-            catch (Exception)
-            {
-                throw new Exception();
-            }
+            ibclient.ContractDetails += Ibclient_ContractDetails;
+            ibclient.ContractDetailsEnd += Ibclient_ContractDetailsEnd;
+            ibclient.CurrentTime += Ibclient_CurrentTime;
+            ibclient.tickByTickAllLast += Ibclient_tickByTickAllLast;
+            ibclient.tickByTickBidAsk += Ibclient_tickByTickBidAsk;
+            ibclient.HeadTimestamp += Ibclient_HeadTimestamp;
+            ibclient.HistoricalData += Ibclient_HistoricalData;
+            ibclient.HistoricalDataEnd += Ibclient_HistoricalDataEnd;
+            ibclient.HistoricalDataUpdate += Ibclient_HistoricalDataUpdate;
         }
-
-        /// <summary>
-        /// Request full contract details based on some initial specifications.
-        /// Enough info should be provided so that only a single instrument type (FUT,Stock) will be returned.
-        /// </summary>
-        public void TWS_RequestContractDetails(string symbol, string sectype, string primaryExchange)
-        {
-            IBApi.Contract requestContract = new Contract();
-            requestContract.Symbol = symbol;
-            requestContract.SecType = sectype;
-            requestContract.Exchange = primaryExchange;
-            ib.ClientSocket.reqContractDetails(TWS_GetOrderId(), requestContract);
-        }
-
-        /// <summary>
-        /// Operations to perform once TWS connection is acquired.
-        /// Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
-        /// </summary>
-        public void TWS_Connected()
-        {
-            MessageLogger.LogMessage("Requesting TWS Time");
-            ib.ClientSocket.reqCurrentTime();
-        }
-
-        /// <summary>
-        /// Convenience function which automatically updates order ID.
-        /// For a single client, connection, it is sufficient to simply increment after each use.
-        /// For multiple clients, a more elaborate system is needed. See 10.3.1.1 of API 973.07
-        /// </summary>
-        /// <returns></returns>
-        public int TWS_GetOrderId()
-        {
-            ib.NextOrderId++;
-            return ib.NextOrderId;
-        }
-
-        /// <summary>
-        /// Convenience wrapper to simply return the current order id without auto-increment.
-        /// </summary>
-        /// <returns></returns>
-        public int TWS_GetCurrentOrderId()
-        {
-            return ib.NextOrderId;
-        }
-
-        /// <summary>
-        /// Generate a unique key based on contract information
-        /// </summary>
-        /// <param name="c"></param>
-        /// <returns></returns>
-        public string TWS_ContractKey(Contract c)
-        {
-            string contractkey = string.Empty;
-
-            if(c != null)
-            {
-                contractkey = String.Format("{0}_{1}_{2}", c.SecType,c.Symbol,c.Exchange);
-            }
-            return contractkey;
-        }
-
-        /// <summary>
-        /// Request tick market data (Level I bid/ask/last)
-        /// </summary>
-        /// <param name="cd"></param>
-        public void TWS_RequestTickData(Contract c)
-        {
-            int id_last = TWS_GetOrderId();
-            int id_bidask = TWS_GetOrderId();
-            string contractKey = TWS_ContractKey(c);
-            TWS_AddContractRequest(id_last, c);
-            TWS_AddContractRequest(id_bidask, c);
-            ib.ClientSocket.reqTickByTickData(id_last, c, TWSInfo.TWS_TickType.Last, 0, false);
-            ib.ClientSocket.reqTickByTickData(id_bidask, c, TWSInfo.TWS_TickType.BidAsk, 0, false);
-        }
-
-        /// <summary>
-        /// Submit request for historical data
-        /// </summary>
-        /// <param name="c"></param>
-        public void TWS_RequestHistoricalData(Contract c)
-        {
-            int id_historical = TWS_GetOrderId();
-            TWS_AddContractRequest(id_historical, c);
-            
-            // Find out how much data is available for given contract. Once we know that, we can submit for data in "chunks" (due to TWS data limits)
-            ib.ClientSocket.reqHeadTimestamp(id_historical, c, TWSInfo.TWS_WhatToShow.Trades , TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
-        }
-
-        // Associate a contract with a particular data request
-        private void TWS_AddContractRequest(int reqId, Contract c)
-        {
-            string contractKey = TWS_ContractKey(c);
-
-            // Need to add this request so we can look up what contract is related to the reqId when we receive the events
-            if(model.DataRequests.ContainsKey(reqId) == false)
-            {
-                model.DataRequests.Add(reqId, contractKey);
-            } else
-            {
-                // reqID are unique so it shouldn't be here. If so, we need to investigate further.
-                throw new NotImplementedException();
-            }
-        }
-
-        // Remove the association between a contract and the data request
-        private void TWS_DeleteContractRequest(int reqId)
-        {
-            model.DataRequests.Remove(reqId);
-        }
-
-        // Get the contract associated with a given request (if any)
-        private GooContract TWS_GetDataRequestContract(int reqId)
-        {
-            string contractKey = model.DataRequests[reqId];
-            GooContract c = model.Contracts[contractKey];
-            return c;
-        }
-        #endregion TWS Methods
+        #endregion
 
         #region TWS Event Handlers
-        private void Ib_ConnectionClosed()
+        // Received an updated historical data packet
+        private static void Ibclient_HistoricalDataUpdate(messages.HistoricalDataMessage obj)
         {
-            MessageLogger.LogMessage("Connection Lost!");
+            throw new NotImplementedException();
         }
 
-        // Valid ID signal from TWS implies TWS is ready to recieve commands
-        private void Ib_NextValidId(messages.ConnectionStatusMessage obj)
+        // Received final packet of data for the duration requested in the current historical data request.
+        private static void Ibclient_HistoricalDataEnd(messages.HistoricalDataEndMessage hDataEnd)
         {
-            ib.NextOrderId = 0;
- 
-            vm.IsTwsConnected = ib.ClientSocket.IsConnected();
-            // perform any actions needed after a connection has occurred.
-            TWS_Connected();
+            GooContract c = GetDataRequestContract(hDataEnd.RequestId, true);
         }
 
-        // Error message handler.
-        // Handles both standard error codes as well as exceptions
-        private void Ib_Error(int id, int errorCode, string errorMsg, Exception exception)
+        // Received packet of historical data from TWS
+        private static void Ibclient_HistoricalData(messages.HistoricalDataMessage hdata)
         {
-            // Default message just prints error codes
-            var errMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), errorMsg);
-
-            // Exception implies stream issues (TWS went away)
-            if (exception != null)
-            {
-                ib.ClientSocket.eDisconnect();
-                errMsg = "TWS Disconnected!";
-            }
-
-            MessageLogger.LogMessage(errMsg);
+            var msg = String.Format("Time={0},Open={1},High={2},Low={3},Close={4}", hdata.Date, hdata.Open, hdata.High, hdata.Low, hdata.Close);
+            MessageLogger.LogMessage(msg);
         }
 
-        // TWS has finished with all details for ContractDetailsRequest (all expirations, etc.)
-        private void Ib_ContractDetailsEnd(int reqId)
+        // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
+        private static void Ibclient_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
+        {
+            GooContract c = GetDataRequestContract(headTimeStamp.ReqId, true);
+            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
+
+            int histDataReqId = GetOrderId();
+
+            // Start requesting historical data 1 day at a time. We'll go until we hit the head time stamp.
+            c.HistDataRequestDateTime = DateTime.Now;
+            var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
+
+            // Add a new data request
+            AddContractRequest(histDataReqId, c.TWSContractDetails.Contract);
+
+            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
+            ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
+                TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
+        }
+
+        // TWS message response to real-time data: Bid/Ask update
+        private static void Ibclient_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
+        {
+            GooContract c = GetDataRequestContract(bidask.ReqId, false);
+            c.Bid = bidask.BidPrice;
+            c.Ask = bidask.AskPrice;
+        }
+
+        // TWS message response to real-time data: Last update
+        private static void Ibclient_tickByTickAllLast(messages.TickByTickAllLastMessage last)
+        {
+            GooContract c = GetDataRequestContract(last.ReqId, false);
+            c.Last = last.Price;
+        }
+
+        // TWS response with request for server time. Used to get local offset
+        private static void Ibclient_CurrentTime(long time)
+        {
+            var twsTime = new DateTime(1970, 1, 1);
+            twsTime = twsTime.AddSeconds(time).ToLocalTime();
+            var localTime = DateTime.Now;
+
+            ServerTimeOffset = twsTime - localTime;
+
+            var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms",
+                twsTime.ToLongTimeString(), localTime.ToLongTimeString(), TWS.ServerTimeOffset.TotalMilliseconds.ToString());
+            MessageLogger.LogMessage(msg);
+        }
+
+        private static void Ibclient_ContractDetailsEnd(int reqId)
         {
             MessageLogger.LogMessage(String.Format("ContractDetails request {0} completed", reqId.ToString()));
         }
 
         // TWS response for a single instance of contractDetails for a given request
-        private void Ib_ContractDetails(messages.ContractDetailsMessage msg_cd)
+        private static void Ibclient_ContractDetails(messages.ContractDetailsMessage msg_cd)
         {
             ContractDetails cd = msg_cd.ContractDetails;
-
-            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), TWS_ContractKey(cd.Contract)));
-
-            string contractKey = TWS_ContractKey(cd.Contract);
-
+            string contractKey = GetContractKey(cd.Contract);
+            string logMsg = String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey);
+            MessageLogger.LogMessage(logMsg);
+            
             // Contract is created only for first expiration received.
             // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
-            if (model.Contracts.ContainsKey(contractKey) == false)
+            if (Model.Contracts.ContainsKey(contractKey) == false)
             {
                 var currentContract = new GooContract();
                 currentContract.TWSContractDetails = cd;
@@ -219,69 +144,210 @@ namespace IBSampleApp
                 currentContract.Symbol = cd.MarketName;
 
                 // Add this contract information to the model as well as the viewmodel
-                model.Contracts.Add(contractKey, currentContract);
-                vm.Contracts.Add(currentContract);
+                Model.Contracts.Add(contractKey, currentContract);
+                // TODO vm.Contracts.Add(currentContract);
 
-                // submit request for tick bid/ask/last data for this contract
-                TWS_RequestTickData(cd.Contract);
+                // submit request for tick bid/ask/last data for this contract. This request should persist indefinitely.
+                RequestTickData(cd.Contract);
+
                 // Also submit a request for historical data
-                TWS_RequestHistoricalData(cd.Contract);
+                RequestHistoricalData(cd.Contract);
             }
 
-            //
-            TWS_DeleteContractRequest(msg_cd.RequestId);
+            // request has been processed so remove it from pending list.
+            DeleteContractRequest(msg_cd.RequestId);
         }
 
-        // TWS response with request for server time. Used to get local offset
-        private void Ib_CurrentTime(long time)
+        // Error message handler. Handles both standard error codes as well as exceptions
+        private static void Ibclient_Error(int id, int errorCode, string errorMsg, Exception exception)
         {
-            var twsTime = new DateTime(1970, 1, 1);
-            twsTime = twsTime.AddSeconds(time).ToLocalTime();
-            var localTime = DateTime.Now;
+            // Default message just prints error codes
+            var errMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), errorMsg);
 
-            model.ServerTimeOffset = twsTime - localTime;      
+            // Exception implies stream issues (TWS went away)
+            if (exception != null)
+            {
+                ibclient.ClientSocket.eDisconnect();
+                errMsg = "TWS Disconnected!";
+            }
 
-            var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms", 
-                twsTime.ToLongTimeString(), localTime.ToLongTimeString(), model.ServerTimeOffset.TotalMilliseconds.ToString());
-            MessageLogger.LogMessage(msg);
+            MessageLogger.LogMessage(errMsg);
         }
 
-        // TWS message response to real-time data: Bid/Ask update
-        private void Ib_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
+        private static void Ibclient_ConnectionClosed()
         {
-            GooContract c = TWS_GetDataRequestContract(bidask.ReqId);
-            c.Bid = bidask.BidPrice;
-            c.Ask = bidask.AskPrice;
+            throw new NotImplementedException();
         }
 
-        // TWS message response to real-time data: Last update
-        private void Ib_tickByTickAllLast(messages.TickByTickAllLastMessage last)
+        private static void Ibclient_NextValidId(messages.ConnectionStatusMessage obj)
         {
-            GooContract c = TWS_GetDataRequestContract(last.ReqId);
-            c.Last = last.Price;
-        }
+            ibclient.NextOrderId = 0;
 
-        // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
-        private void Ib_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
+            // TODO vm.IsTwsConnected = ibclient.ClientSocket.IsConnected();
+            // perform any actions needed after a connection has occurred.
+
+            Connected();
+        }
+        #endregion
+
+        #region Private Methods
+        // Operations to perform once TWS connection is acquired.
+        // Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
+        private static void Connected()
         {
-            GooContract c = TWS_GetDataRequestContract(headTimeStamp.ReqId);
-            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
-                        
-            // Delete the request associated with the timestamp. We'll create others for each chunk of historical data
-            TWS_DeleteContractRequest(headTimeStamp.ReqId);
-            
-            int histDataReqId = TWS_GetOrderId();
-
-            // Start requesting historical data 1 day at a time. We'll go until we hit the head time stamp.
-            c.HistDataRequestDateTime = DateTime.Now;
-            var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
-            // Add a new data request
-            TWS_AddContractRequest(histDataReqId, c.TWSContractDetails.Contract);
-
-            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
-            ib.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
-                TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
+            MessageLogger.LogMessage("Requesting TWS Time");
+            ibclient.ClientSocket.reqCurrentTime();
         }
-        #endregion TWS Event Handlers
+
+        // Connection with TWS client has been closed
+        private static void ConnectionClosed()
+        {
+            MessageLogger.LogMessage("Connection Lost!");
+        }
+
+        // Associate a contract with a particular data request
+        private static void AddContractRequest(int reqId, Contract c)
+        {
+            string contractKey = GetContractKey(c);
+
+            // Need to add this request so we can look up what contract is related to the reqId when we receive the events
+            if (datarequests.ContainsKey(reqId) == false)
+            {
+                datarequests.Add(reqId, contractKey);
+            }
+            else
+            {
+                // reqID are unique so it shouldn't be here. If so, we need to investigate further.
+                throw new NotImplementedException();
+            }
+        }
+
+        // Remove the association between a contract and the data request
+        private static void DeleteContractRequest(int reqId)
+        {
+            datarequests.Remove(reqId);
+        }
+
+        // Get the contract associated with a given request (if any)
+        private static GooContract GetDataRequestContract(int reqId, bool isSingleUse)
+        {
+            string contractKey = datarequests[reqId];
+            GooContract c = Model.Contracts[contractKey];
+
+            // No need to keep track of this request any more if it was single-use only.
+            if (isSingleUse == true)
+            {
+                DeleteContractRequest(reqId);
+            }
+            return c;
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Open local connection to TWS
+        /// </summary>
+        public static void Connect()
+        {
+            try
+            {
+                // Open a connection to TWS
+                ibclient.ClientId = 0;
+                ibclient.ClientSocket.eConnect("127.0.0.1", 7497, 0);
+
+                // Start an IB reader thread
+                var reader = new EReader(ibclient.ClientSocket, signal);
+                reader.Start();
+
+                // background thread to process TWS messages
+                new Thread(() => { while (ibclient.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
+            }
+            catch (Exception)
+            {
+                throw new Exception();
+            }
+        }
+
+        /// <summary>
+        /// Request full contract details based on some initial specifications.
+        /// Enough info should be provided so that only a single instrument type (FUT,Stock) will be returned.
+        /// </summary>
+        public static void RequestContractDetails(string symbol, string sectype, string primaryExchange)
+        {
+            IBApi.Contract requestContract = new Contract();
+            requestContract.Symbol = symbol;
+            requestContract.SecType = sectype;
+            requestContract.Exchange = primaryExchange;
+            var req_id = GetOrderId();
+
+            // Transmit request for details of all contracts as described above. Info will be returned via TWS events.
+            ibclient.ClientSocket.reqContractDetails(req_id, requestContract);
+        }
+
+        /// <summary>
+        /// Convenience function which automatically updates order ID.
+        /// For a single client, connection, it is sufficient to simply increment after each use.
+        /// For multiple clients, a more elaborate system is needed. See 10.3.1.1 of API 973.07
+        /// </summary>
+        /// <returns></returns>
+        public static int GetOrderId()
+        {
+            ibclient.NextOrderId++;
+            return ibclient.NextOrderId;
+        }
+
+        /// <summary>
+        /// Convenience wrapper to simply return the current order id without auto-increment.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetCurrentOrderId()
+        {
+            return ibclient.NextOrderId;
+        }
+
+        /// <summary>
+        /// Generate a unique key based on contract information
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static string GetContractKey(Contract c)
+        {
+            string contractkey = string.Empty;
+
+            if (c != null)
+            {
+                contractkey = String.Format("{0}_{1}_{2}", c.SecType, c.Symbol, c.Exchange);
+            }
+            return contractkey;
+        }
+
+        /// <summary>
+        /// Request tick market data (Level I bid/ask/last)
+        /// </summary>
+        /// <param name="cd"></param>
+        public static void RequestTickData(Contract c)
+        {
+            int id_last = GetOrderId();
+            int id_bidask = GetOrderId();
+            string contractKey = GetContractKey(c);
+            AddContractRequest(id_last, c);
+            AddContractRequest(id_bidask, c);
+            ibclient.ClientSocket.reqTickByTickData(id_last, c, TWSInfo.TWS_TickType.Last, 0, false);
+            ibclient.ClientSocket.reqTickByTickData(id_bidask, c, TWSInfo.TWS_TickType.BidAsk, 0, false);
+        }
+
+        /// <summary>
+        /// Submit request for historical data
+        /// </summary>
+        /// <param name="c"></param>
+        public static void RequestHistoricalData(Contract c)
+        {
+            int id_historical = GetOrderId();
+            AddContractRequest(id_historical, c);
+
+            // Find out how much data is available for given contract. Once we know that, we can submit for data in "chunks" (due to TWS data limits)
+            ibclient.ClientSocket.reqHeadTimestamp(id_historical, c, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
+        }
+        #endregion
     }
 }

@@ -16,6 +16,9 @@ namespace IBSampleApp
         // Return all defined state transitions for the FSM
         StateTransition[] GetTransitions();
 
+        // Fire an event for the state machine
+        void FireEvent(System.Enum newEvent);
+
         // Required entry and exit state methods.
         void Entry();
         void Exit();
@@ -26,41 +29,59 @@ namespace IBSampleApp
         // Convenience fields to identify the Enums used for States and Events definition in every FSM
         private static string StatesEnumName = "States";
 
-        // Internal state machine. See Appccelerate docs for other types (async, active)
-        private PassiveStateMachine<string, string> _fsm = new PassiveStateMachine<string, string>();
+        // Internal state machine. See Appccelerate docs for other types
+        private ActiveStateMachine<string, string> _fsm = new ActiveStateMachine<string, string>();
         private static string _entryStateName = "Entry";
 
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
-        public virtual void Entry()
-        {
-            throw new NotImplementedException();
-        }
+        public virtual void Entry() { }
 
-        public virtual void Exit()
-        {
-        }
+        public virtual void Exit() { }
         #endregion
 
-        #region Methods
         // These are "placeholder" functions that user MUST override!
+        #region "PlaceHolder" Methods
+        // Return typeof(YourEventsEnum)
         public virtual Type GetEvents()
         {
             throw new NotImplementedException();
         }
 
+        // Return typeof(YourStatesEnum)
         public virtual Type GetStates()
         {
             throw new NotImplementedException();
         }
 
+        // Return array of your StateTransitions
         public virtual StateTransition[] GetTransitions()
         {
             throw new NotImplementedException();
         }
         #endregion
 
-        public void Initialize()
+        #region Methods
+        /// <summary>
+        /// Generate event to transition from one state to another
+        /// </summary>
+        /// <param name="newEvent"></param>
+        public void FireEvent(Enum newEvent)
+        {
+            Type enumType = this.GetEvents();
+            Type eventType = newEvent.GetType();
+
+            // Make sure event passed was of the same enum type. We're not checking that we passed the right event for the situation,
+            // just making sure we didn't send in the wrong type by accident.
+            if(eventType == enumType)
+            {
+                _fsm.Fire(newEvent.ToString());
+            }
+        }
+        #endregion
+
+        // Constructor
+        public FiniteStateMachine()
         {
             Type states = this.GetStates();
             Type events = this.GetEvents();
@@ -83,12 +104,12 @@ namespace IBSampleApp
                 _fsm.In(stateName).ExecuteOnEntry(methodAction);
             }
 
-            // Starting state is always the "Entry" state. 
+            // Starting state is always the "Entry" state.
             _fsm.Initialize(_entryStateName);
-            _fsm.Start();
         }
 
-        public void Initialize2()
+        // contains some reflection code we may want to use later. 
+        private void Initialize2()
         {
             Type classtype = this.GetType();
             MethodInfo[] classmethods = Type.GetType(this.ToString()).GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -109,16 +130,6 @@ namespace IBSampleApp
                 throw new NotImplementedException();
             }
 
-            // Build all allowed transitions. Note that hierarchy is not currently supported with this implementation
-            //foreach (StateTransition t in this.Transitions)
-            //{
-            //    _fsm.In(t.InState.ToString()).On(t.OnEvent.ToString()).Goto(t.GotoState.ToString());
-            //}
-
-            // Assign execution code for required states (by default they do nothing, but user can override)
-            //_fsm.In(States.Entry.ToString()).ExecuteOnEntry(this.Entry);
-            //_fsm.In(States.Exit.ToString()).ExecuteOnEntry(this.Exit);
-
             // TODO: Assign execution for all defined states
             foreach (string stateName in stateNames)
             {
@@ -130,12 +141,6 @@ namespace IBSampleApp
                 }
                 Action methodAction = (Action)Delegate.CreateDelegate(typeof(Action), this, stateName);
             }
-
-            // Initial state is always the Entry state
-            //_fsm.Initialize(States.Entry.ToString());
-
-            // State machine must be started for events to process. If not started, they will queue.
-            //_fsm.Start();
         }
     }
 
