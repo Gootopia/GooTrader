@@ -10,7 +10,7 @@ using System.Windows.Data;
 namespace IBSampleApp
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for MainWindow.xaml UI Events
     /// </summary>
     public partial class MainWindow : Window
     {

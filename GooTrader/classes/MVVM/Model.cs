@@ -10,13 +10,13 @@ namespace IBSampleApp
     /// Model is the domain object for program data. It knows nothing of the ViewModel or the View.
     /// To incorporate data from the model, a mirror object should be created in the View model which pulls out the relevant data.
     /// </summary>
-    public static class Model
+    public class Model
     {
         // Contracts list. Keys are "Ticker_PrimaryExchange"
         public static Dictionary<string, GooContract> Contracts = new Dictionary<string, GooContract>();
 
         #region Constructor
-        static Model()
+        public Model()
         {
 
         }

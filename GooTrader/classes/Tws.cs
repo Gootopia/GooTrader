@@ -9,7 +9,7 @@ using System.Windows;
 namespace IBSampleApp
 {
     // Singleton TWS class
-    public static class TWS
+    public class TWS
     {
         // Offset between local and TWS time
         public static TimeSpan ServerTimeOffset;
@@ -145,7 +145,7 @@ namespace IBSampleApp
 
                 // Add this contract information to the model as well as the viewmodel
                 Model.Contracts.Add(contractKey, currentContract);
-                // TODO vm.Contracts.Add(currentContract);
+                ViewModel.Contracts.Add(currentContract);
 
                 // submit request for tick bid/ask/last data for this contract. This request should persist indefinitely.
                 RequestTickData(cd.Contract);
@@ -183,8 +183,8 @@ namespace IBSampleApp
         {
             ibclient.NextOrderId = 0;
 
-            // TODO vm.IsTwsConnected = ibclient.ClientSocket.IsConnected();
-            // perform any actions needed after a connection has occurred.
+            // Need to update the view model 
+            ViewModel.RaiseTwsConnectionStateChangedEvent(ibclient.ClientSocket.IsConnected());
 
             Connected();
         }

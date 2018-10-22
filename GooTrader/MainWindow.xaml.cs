@@ -17,7 +17,7 @@ namespace IBSampleApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        // MVVM components.
+        // Need an instance of the view model so we can bind to UI
         public ViewModel vm = new ViewModel();
 
         public FSM_DownloadHistoricalData fsm_hd = new FSM_DownloadHistoricalData();
@@ -29,8 +29,8 @@ namespace IBSampleApp
             // Top level data context is the viewmodel. 
             main.DataContext = vm;
 
-            // MessageLogger is static class, so need to assign a messages collection. Just use the one from the ViewModel
-            MessageLogger.messages = vm.Messages;
+            // MessageLogger is static class, so need to assign a messages collection. Use the one from the Viewmodel as UI binding is already set.
+            MessageLogger.messages = ViewModel.Messages;
 
             // System timer for clock
             DispatcherTimer sysClock = new DispatcherTimer();
