@@ -1,2 +1,15 @@
 
 \.vs/GooTrader/v15/Server/sqlite3/storage\.ide-shm
+<<<<<<< HEAD
+=======
+
+GooTrader/bin/
+
+GooTrader/obj/
+
+\.vs/GooTrader/v15/\.suo
+
+\.vs/GooTrader/DesignTimeBuild/
+
+\.vs/GooTrader/v15/
+>>>>>>> FIXIT
