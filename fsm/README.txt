@@ -1,2 +1,0 @@
-Finite state machines created using Appcelerate (http://www.appccelerate.com/statemachine.html)
-Finite state machine diagrams created using Draw.io (https://www.draw.io/) Download to desktop is available under Help menu.

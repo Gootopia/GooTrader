@@ -10,24 +10,23 @@ using System.Windows.Data;
 namespace IBSampleApp
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml UI Events
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-            TWS.Connect();
+            TWS_Connect();
         }
 
         private void btnReqContracts_Click(object sender, RoutedEventArgs e)
         {
-            TWS.RequestContractDetails("ES", "FUT", TWSInfo.TWS_Exchanges.Globex);
-            TWS.RequestContractDetails("NQ", "FUT", TWSInfo.TWS_Exchanges.Globex);
+            TWS_RequestContractDetails("ES", "FUT", Exchanges.Globex);
+            TWS_RequestContractDetails("NQ", "FUT", Exchanges.Globex);
         }
 
         private void btnReqData_Click(object sender, RoutedEventArgs e)
         {
-            fsm_hd.FireEvent(FSM_DownloadHistoricalData.Events.RequestContractDetails);
-         }
+        }
     }
 }
