@@ -11,7 +11,7 @@
     <Window.Resources>
         <local:SystemTimeConverter x:Key="SystemTimeConverter"/>
     </Window.Resources>
-    <!-- NOTE: Refer to ViewModel class for available binding objects. DON'T BIND TO STUFF OUTSIDE THIS CLASS!!!!-->
+    <!-- NOTE: Refer to ViewModel class for available binding objects. DON'T BIND TO STUFF OUTSIDE THE VIEWMODEL!!!!-->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
