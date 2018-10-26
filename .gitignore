@@ -1,5 +1,7 @@
 
 \.vs/GooTrader/v15/Server/sqlite3/storage\.ide-shm
+<<<<<<< HEAD
+=======
 
 GooTrader/bin/
 
@@ -10,3 +12,4 @@ GooTrader/obj/
 \.vs/GooTrader/DesignTimeBuild/
 
 \.vs/GooTrader/v15/
+>>>>>>> FIXIT
