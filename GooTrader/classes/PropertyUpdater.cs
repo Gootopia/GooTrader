@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace IBSampleApp
@@ -36,5 +37,24 @@ namespace IBSampleApp
             }
         }
 
+        // bool version
+        public void UpdateProperty(ref bool property, bool value, [CallerMemberName]string propertyName = "")
+        {
+            if (property != value)
+            {
+                property = value;
+                NotifyPropertyChanged(propertyName);
+            }
+        }
+
+        // DateTime version
+        public void UpdateProperty(ref DateTime property, DateTime value, [CallerMemberName]string propertyName = "")
+        {
+            if (property != value)
+            {
+                property = value;
+                NotifyPropertyChanged(propertyName);
+            }
+        }
     }
 }
