@@ -7,6 +7,12 @@ using System;
 
 namespace IBSampleApp
 {
+    public class ContractFSM
+    {
+        readonly FSM_DownloadHistoricalData fsm_download;
+    }
+
+    // Information about a specific trading instrument
     public class GooContract : PropertyUpdater
     {
         // Properties below don't need UpdateProperty in the settor as ViewModel doesn't access them

@@ -2,7 +2,7 @@
 
 namespace IBSampleApp
 {
-    // Recommended to use interface to define state methods so proper signature can be enforced.
+    // Strongly recommended to use interface to define state methods so proper signature can be enforced.
     public interface IFSM_DownloadHistoricalData
     {
         void RequestContractDetails();
@@ -21,13 +21,13 @@ namespace IBSampleApp
         // All valid states
         public enum States
         {
-            Entry,
+            Initialize,
             RequestContractDetails,
             GetHeadTimeStamp,
             RequestHistoricalData,
             StoreData,
             SelectNextDownloadDate,
-            Exit
+            Terminate
         }
 
         // All valid transition events.
@@ -44,14 +44,14 @@ namespace IBSampleApp
         // Valid state transitions
         public StateTransition[] Transitions = new StateTransition[]
         {
-            new StateTransition(States.Entry, Events.RequestContractDetails, States.RequestContractDetails),
+            new StateTransition(States.Initialize, Events.RequestContractDetails, States.RequestContractDetails),
             new StateTransition(States.RequestContractDetails, Events.GotContractDetails, States.GetHeadTimeStamp),
             new StateTransition(States.GetHeadTimeStamp, Events.GotHeadTimeStamp, States.RequestHistoricalData),
             new StateTransition(States.RequestHistoricalData, Events.GotHistoricalDataPacket, States.StoreData),
             new StateTransition(States.StoreData, Events.GotHistoricalDataPacket, States.StoreData),
             new StateTransition(States.StoreData, Events.HistoricalRequestDone, States.SelectNextDownloadDate),
             new StateTransition(States.SelectNextDownloadDate, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.SelectNextDownloadDate, Events.AllDataReceived, States.Exit)
+            new StateTransition(States.SelectNextDownloadDate, Events.AllDataReceived, States.Terminate)
         };
         #endregion
 
@@ -71,7 +71,10 @@ namespace IBSampleApp
         {
             return Transitions;
         }
+        #endregion
 
+        // Methods for individual states
+        #region State Methods
         public void RequestContractDetails()
         {
             throw new NotImplementedException();

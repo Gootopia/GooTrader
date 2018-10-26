@@ -46,6 +46,8 @@ namespace IBSampleApp
         // - Create a static event, a class method to raise the event, and a class method to modify the bound property.
         // - Added the modification method to the event in the constructor
         // - In the external static method, call the method which raises the event.
+        // TODO: Convert this type of thing to a class so we can re-use. The class should also have the field we want to modify,
+        // so we will have to update the XAML binding as well
         #region SetTwsConnectionState Event
         public static event Action<bool> TwsConnectionStateChanged;
 

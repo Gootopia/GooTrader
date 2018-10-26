@@ -20,8 +20,8 @@ namespace IBSampleApp
         void FireEvent(System.Enum newEvent);
 
         // Required entry and exit state methods.
-        void Entry();
-        void Exit();
+        void Initialize();
+        void Terminate();
     }
 
     public class FiniteStateMachine : IFiniteStateMachine
@@ -31,13 +31,13 @@ namespace IBSampleApp
 
         // Internal state machine. See Appccelerate docs for other types
         private ActiveStateMachine<string, string> _fsm = new ActiveStateMachine<string, string>();
-        private static string _entryStateName = "Entry";
+        private static string _initializeStateName = "Initialize";
 
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
-        public virtual void Entry() { }
+        public virtual void Initialize() { }
 
-        public virtual void Exit() { }
+        public virtual void Terminate() { }
         #endregion
 
         // These are "placeholder" functions that user MUST override!
@@ -94,7 +94,7 @@ namespace IBSampleApp
                 _fsm.In(t.InState.ToString()).On(t.OnEvent.ToString()).Goto(t.GotoState.ToString());
             }
 
-            // TODO: Add error checking to make sure "Entry" and "Exit" states are in state list
+            // TODO: Add error checking to make sure "Initialize" and "Terminate" states are in state list
 
             // Create an action for each state method
             foreach (string stateName in stateNames)
@@ -104,8 +104,8 @@ namespace IBSampleApp
                 _fsm.In(stateName).ExecuteOnEntry(methodAction);
             }
 
-            // Starting state is always the "Entry" state.
-            _fsm.Initialize(_entryStateName);
+            // Starting state is always the "Initialize" state.
+            _fsm.Initialize(_initializeStateName);
         }
 
         // contains some reflection code we may want to use later. 
