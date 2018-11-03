@@ -2,18 +2,9 @@
 
 namespace IBSampleApp
 {
-    // Strongly recommended to use interface to define state methods so proper signature can be enforced.
-    public interface IFSM_DownloadHistoricalData
-    {
-        void GetHeadTimeStamp(GooContract c);
-        void RequestHistoricalData(GooContract c);
-        void StoreData(GooContract c);
-        void SelectNextDownloadDate(GooContract c);
-    }
-
     // FSM - DownloadHistoricalData
     // Downloads historical price data from broker platform
-    public class FSM_DownloadHistoricalData : FiniteStateMachine, IFSM_DownloadHistoricalData
+    public class FSM_DownloadHistoricalData : FiniteStateMachine
     {
         // These define the state and event names and the transitions
         #region FSM Definition
@@ -39,7 +30,7 @@ namespace IBSampleApp
         }
 
         // Valid state transitions
-        public StateTransition[] Transitions = new StateTransition[]
+        protected StateTransition[] Transitions = new StateTransition[]
         {
             new StateTransition(States.Initialize, Events.GotContractDetails, States.GetHeadTimeStamp),
             new StateTransition(States.GetHeadTimeStamp, Events.GotHeadTimeStamp, States.RequestHistoricalData),
@@ -53,7 +44,7 @@ namespace IBSampleApp
 
         // The methods are needed to initialize the FSM.
         #region FSM Initialization
-        public override Type GetStates()
+        protected override Type GetStates()
         {
             return typeof(States);
         }
@@ -63,36 +54,36 @@ namespace IBSampleApp
             return typeof(Events);
         }
 
-        public override StateTransition[] GetTransitions()
+        protected override StateTransition[] GetTransitions()
         {
             return Transitions;
         }
 
-        public override Type GetActionSignature()
+        protected override Type GetActionSignature()
         {
             // All types will use this signature
             return typeof(Action<GooContract>);
         }
         #endregion
 
-        // Methods for individual states
+        // Methods for individual states. Should be private or protected as they shouldn't need to be called directly
         #region State Methods
-        public void GetHeadTimeStamp(GooContract c)
+        private void GetHeadTimeStamp(GooContract c)
         {
             //throw new NotImplementedException();
         }
 
-        public void RequestHistoricalData(GooContract c)
+        private void RequestHistoricalData(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        public void StoreData(GooContract c)
+        private void StoreData(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        public void SelectNextDownloadDate(GooContract c)
+        private void SelectNextDownloadDate(GooContract c)
         {
             throw new NotImplementedException();
         }

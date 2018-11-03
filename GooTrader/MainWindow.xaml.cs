@@ -34,7 +34,6 @@ namespace IBSampleApp
             fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotContractDetails);
             fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotHeadTimeStamp);
 
-
             // System timer for clock
             DispatcherTimer sysClock = new DispatcherTimer();
             sysClock.Interval = TimeSpan.FromSeconds(1);

@@ -26,7 +26,7 @@ namespace IBSampleApp
     }
 
     // Finite state machine class
-    public class FiniteStateMachine : IFiniteStateMachine
+    public class FiniteStateMachine
     {
         // Convenience fields to identify the Enums used for States and Events definition in every FSM
         private static string StatesEnumName = "States";
@@ -39,9 +39,9 @@ namespace IBSampleApp
 
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
-        public virtual void Initialize() { }
+        protected virtual void Initialize() { }
 
-        public virtual void Terminate() { }
+        protected virtual void Terminate() { }
         #endregion
 
         // These are "placeholder" functions that user MUST override and return the appropriate type for a specific state machine!
@@ -53,19 +53,19 @@ namespace IBSampleApp
         }
 
         // Return typeof(YourStatesEnum)
-        public virtual Type GetStates()
+        protected virtual Type GetStates()
         {
             throw new NotImplementedException();
         }
 
         // Return array of your StateTransitions
-        public virtual StateTransition[] GetTransitions()
+        protected virtual StateTransition[] GetTransitions()
         {
             throw new NotImplementedException();
         }
 
         // Return an action method signature used by all state methods.
-        public virtual Type GetActionSignature()
+        protected virtual Type GetActionSignature()
         {
             // Default Action has no parameters.
             return typeof(Action<>);
@@ -73,7 +73,7 @@ namespace IBSampleApp
 
         // Allows user to manually assign the Appccelerate ".Execute", ".ExecuteOnEntry", and ".ExecuteOnExit" transition actions.
         // Must pass "true" in the constructor for this to get called!
-        public virtual void AssignStateActions()
+        protected virtual void AssignStateActions()
         {
             // TODO: GOOT-15 We'll implement this later if we need it. If we get the exception, then we know we need it!
             throw new NotImplementedException();
