@@ -5,11 +5,10 @@ namespace IBSampleApp
     // Strongly recommended to use interface to define state methods so proper signature can be enforced.
     public interface IFSM_DownloadHistoricalData
     {
-        void RequestContractDetails();
-        void GetHeadTimeStamp();
-        void RequestHistoricalData();
-        void StoreData();
-        void SelectNextDownloadDate();
+        void GetHeadTimeStamp(GooContract c);
+        void RequestHistoricalData(GooContract c);
+        void StoreData(GooContract c);
+        void SelectNextDownloadDate(GooContract c);
     }
 
     // FSM - DownloadHistoricalData
@@ -22,7 +21,6 @@ namespace IBSampleApp
         public enum States
         {
             Initialize,
-            RequestContractDetails,
             GetHeadTimeStamp,
             RequestHistoricalData,
             StoreData,
@@ -33,7 +31,6 @@ namespace IBSampleApp
         // All valid transition events.
         public enum Events
         {
-            RequestContractDetails,
             GotContractDetails,
             GotHeadTimeStamp,
             GotHistoricalDataPacket,
@@ -44,8 +41,7 @@ namespace IBSampleApp
         // Valid state transitions
         public StateTransition[] Transitions = new StateTransition[]
         {
-            new StateTransition(States.Initialize, Events.RequestContractDetails, States.RequestContractDetails),
-            new StateTransition(States.RequestContractDetails, Events.GotContractDetails, States.GetHeadTimeStamp),
+            new StateTransition(States.Initialize, Events.GotContractDetails, States.GetHeadTimeStamp),
             new StateTransition(States.GetHeadTimeStamp, Events.GotHeadTimeStamp, States.RequestHistoricalData),
             new StateTransition(States.RequestHistoricalData, Events.GotHistoricalDataPacket, States.StoreData),
             new StateTransition(States.StoreData, Events.GotHistoricalDataPacket, States.StoreData),
@@ -71,31 +67,32 @@ namespace IBSampleApp
         {
             return Transitions;
         }
+
+        public override Type GetActionSignature()
+        {
+            // All types will use this signature
+            return typeof(Action<GooContract>);
+        }
         #endregion
 
         // Methods for individual states
         #region State Methods
-        public void RequestContractDetails()
+        public void GetHeadTimeStamp(GooContract c)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void RequestHistoricalData(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        public void GetHeadTimeStamp()
+        public void StoreData(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        public void RequestHistoricalData()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void StoreData()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SelectNextDownloadDate()
+        public void SelectNextDownloadDate(GooContract c)
         {
             throw new NotImplementedException();
         }

@@ -7,9 +7,10 @@ using System;
 
 namespace IBSampleApp
 {
-    public class ContractFSM
+    // Container class with all required state machines for implementing TWS operations.
+    public class TWSFiniteStateMachines
     {
-        readonly FSM_DownloadHistoricalData fsm_download;
+        public readonly FSM_DownloadHistoricalData DownloadHistoricalData;
     }
 
     // Information about a specific trading instrument
@@ -76,8 +77,12 @@ namespace IBSampleApp
         }
         #endregion
 
+        // This is used by TWS to perform various framework functions for this contract (data downloads, order processing, etc.)
+        public readonly TWSFiniteStateMachines FSM = new TWSFiniteStateMachines();
+        
         public GooContract()
         {
+            // Some dummy values just so we know we've got the correct binding
             Bid = 0.0;
             Ask = 1.0;
             Last = 2.0;

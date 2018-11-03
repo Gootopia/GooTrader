@@ -27,7 +27,9 @@ namespace IBSampleApp
 
         private void btnReqData_Click(object sender, RoutedEventArgs e)
         {
-            fsm_hd.FireEvent(FSM_DownloadHistoricalData.Events.RequestContractDetails);
-         }
+            FSM_DownloadHistoricalData fsd = new FSM_DownloadHistoricalData();
+            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotContractDetails);
+            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotHeadTimeStamp);
+        }
     }
 }

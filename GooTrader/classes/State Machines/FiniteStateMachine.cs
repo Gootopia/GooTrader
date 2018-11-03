@@ -5,6 +5,7 @@ using Appccelerate.StateMachine;
 
 namespace IBSampleApp
 {
+    // Basic interface/methods of any finite state machines
     public interface IFiniteStateMachine
     {
         // Return enum type for all allowed states
@@ -24,14 +25,17 @@ namespace IBSampleApp
         void Terminate();
     }
 
+    // Finite state machine class
     public class FiniteStateMachine : IFiniteStateMachine
     {
         // Convenience fields to identify the Enums used for States and Events definition in every FSM
         private static string StatesEnumName = "States";
 
         // Internal state machine. See Appccelerate docs for other types
-        private ActiveStateMachine<string, string> _fsm = new ActiveStateMachine<string, string>();
+        private PassiveStateMachine<string, string> _fsm = new PassiveStateMachine<string, string>();
+        // These two states are for initialization and cleanup
         private static string _initializeStateName = "Initialize";
+        private static string _terminateStateName = "Terminate";
 
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
@@ -40,7 +44,7 @@ namespace IBSampleApp
         public virtual void Terminate() { }
         #endregion
 
-        // These are "placeholder" functions that user MUST override!
+        // These are "placeholder" functions that user MUST override and return the appropriate type for a specific state machine!
         #region "PlaceHolder" Methods
         // Return typeof(YourEventsEnum)
         public virtual Type GetEvents()
@@ -57,6 +61,21 @@ namespace IBSampleApp
         // Return array of your StateTransitions
         public virtual StateTransition[] GetTransitions()
         {
+            throw new NotImplementedException();
+        }
+
+        // Return an action method signature used by all state methods.
+        public virtual Type GetActionSignature()
+        {
+            // Default Action has no parameters.
+            return typeof(Action<>);
+        }
+
+        // Allows user to manually assign the Appccelerate ".Execute", ".ExecuteOnEntry", and ".ExecuteOnExit" transition actions.
+        // Must pass "true" in the constructor for this to get called!
+        public virtual void AssignStateActions()
+        {
+            // TODO: GOOT-15 We'll implement this later if we need it. If we get the exception, then we know we need it!
             throw new NotImplementedException();
         }
         #endregion
@@ -81,7 +100,11 @@ namespace IBSampleApp
         #endregion
 
         // Constructor
-        public FiniteStateMachine()
+        /// <summary>
+        /// FSM Constructor
+        /// </summary>
+        /// <param name="startFSM">true=>start FSM.</param>
+        public FiniteStateMachine(bool startFSM=true, bool assignActionsManually=false)
         {
             Type states = this.GetStates();
             Type events = this.GetEvents();
@@ -95,20 +118,47 @@ namespace IBSampleApp
             }
 
             // TODO: Add error checking to make sure "Initialize" and "Terminate" states are in state list
+            // TODO: Add a call to a manual setup which allows any state method signatures
 
-            // Create an action for each state method
-            foreach (string stateName in stateNames)
+            if (assignActionsManually == false)
             {
-                // TODO: Future use could add "Entry" and "Exit" to method signatures to allow more flexible execution
-                Action methodAction = (Action)Delegate.CreateDelegate(typeof(Action), this, stateName);
-                _fsm.In(stateName).ExecuteOnEntry(methodAction);
+                // Create an action for each state method with a GooContract parameter
+                foreach (string stateName in stateNames)
+                {
+                    // All states except initialization and termination states have signatures. Those get done below
+                    if (!stateName.Equals(_initializeStateName) && !stateName.Equals(_terminateStateName))
+                    {
+                        // TODO: Future use could add "Entry" and "Exit" to method signatures to allow more flexible execution
+
+                        //var methodAction = (Action<GooContract>)Delegate.CreateDelegate(typeof(Action<GooContract>), this, stateName);
+                        // dynamic allows us to cast without run-time static checking. Line above was previous implementation.
+                        // This allows user to provide an Action method signature.
+                        dynamic methodAction = Delegate.CreateDelegate(this.GetActionSignature(), this, stateName);
+                        _fsm.In(stateName).ExecuteOnEntry(methodAction);
+                    }
+                }
+            }
+            else
+            {
+                // Up to the user to define the Appccelerate ".Execute" type stuff. See Appccelerate: http://www.appccelerate.com/statemachineactions.html
+                AssignStateActions();
             }
 
+            // Always have starting and termination states
+            _fsm.In(_initializeStateName).ExecuteOnEntry(this.Initialize);
+            _fsm.In(_terminateStateName).ExecuteOnEntry(this.Terminate);
+            
             // Starting state is always the "Initialize" state.
             _fsm.Initialize(_initializeStateName);
+
+            // Default to begin operation of the FSM.
+            if(startFSM == true)
+            {
+                _fsm.Start();
+            }
         }
 
-        // contains some reflection code we may want to use later. 
+        // contains some reflection code we may want to use later. Ignore it for now
         private void Initialize2()
         {
             Type classtype = this.GetType();

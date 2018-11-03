@@ -81,7 +81,7 @@ namespace IBSampleApp
             var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
 
             // Add a new data request
-            AddContractRequest(histDataReqId, c.TWSContractDetails.Contract);
+            AddContractRequest(histDataReqId, c);
 
             // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
             ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
@@ -126,7 +126,8 @@ namespace IBSampleApp
         private static void Ibclient_ContractDetails(messages.ContractDetailsMessage msg_cd)
         {
             ContractDetails cd = msg_cd.ContractDetails;
-            string contractKey = GetContractKey(cd.Contract);
+            var ib_contract = cd.Contract;
+            string contractKey = GetContractKey(ib_contract);
             string logMsg = String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey);
             MessageLogger.LogMessage(logMsg);
             
@@ -148,10 +149,10 @@ namespace IBSampleApp
                 ViewModel.Contracts.Add(currentContract);
 
                 // submit request for tick bid/ask/last data for this contract. This request should persist indefinitely.
-                RequestTickData(cd.Contract);
+                RequestTickData(currentContract);
 
                 // Also submit a request for historical data
-                RequestHistoricalData(cd.Contract);
+                RequestHistoricalData(currentContract);
             }
 
             // request has been processed so remove it from pending list.
@@ -206,9 +207,9 @@ namespace IBSampleApp
         }
 
         // Associate a contract with a particular data request
-        private static void AddContractRequest(int reqId, Contract c)
+        private static void AddContractRequest(int reqId, GooContract c)
         {
-            string contractKey = GetContractKey(c);
+            string contractKey = GetContractKey(c.TWSContractDetails.Contract);
 
             // Need to add this request so we can look up what contract is related to the reqId when we receive the events
             if (datarequests.ContainsKey(reqId) == false)
@@ -306,14 +307,14 @@ namespace IBSampleApp
         }
 
         /// <summary>
-        /// Generate a unique key based on contract information
+        /// Generate a unique key based on IB contract information
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
         public static string GetContractKey(Contract c)
         {
             string contractkey = string.Empty;
-
+           
             if (c != null)
             {
                 contractkey = String.Format("{0}_{1}_{2}", c.SecType, c.Symbol, c.Exchange);
@@ -325,28 +326,31 @@ namespace IBSampleApp
         /// Request tick market data (Level I bid/ask/last)
         /// </summary>
         /// <param name="cd"></param>
-        public static void RequestTickData(Contract c)
+        public static void RequestTickData(GooContract c)
         {
             int id_last = GetOrderId();
             int id_bidask = GetOrderId();
-            string contractKey = GetContractKey(c);
+            var ib_contract = c.TWSContractDetails.Contract;
+            string contractKey = GetContractKey(ib_contract);
             AddContractRequest(id_last, c);
             AddContractRequest(id_bidask, c);
-            ibclient.ClientSocket.reqTickByTickData(id_last, c, TWSInfo.TWS_TickType.Last, 0, false);
-            ibclient.ClientSocket.reqTickByTickData(id_bidask, c, TWSInfo.TWS_TickType.BidAsk, 0, false);
+            ibclient.ClientSocket.reqTickByTickData(id_last, ib_contract, TWSInfo.TWS_TickType.Last, 0, false);
+            ibclient.ClientSocket.reqTickByTickData(id_bidask, ib_contract, TWSInfo.TWS_TickType.BidAsk, 0, false);
         }
 
         /// <summary>
         /// Submit request for historical data
         /// </summary>
         /// <param name="c"></param>
-        public static void RequestHistoricalData(Contract c)
+        public static void RequestHistoricalData(GooContract c)
         {
             int id_historical = GetOrderId();
             AddContractRequest(id_historical, c);
+            var ib_contract = c.TWSContractDetails.Contract;
 
+            //TODO: Need to hide actual state methods and make them private (still need to check if this works)
             // Find out how much data is available for given contract. Once we know that, we can submit for data in "chunks" (due to TWS data limits)
-            ibclient.ClientSocket.reqHeadTimestamp(id_historical, c, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
+            ibclient.ClientSocket.reqHeadTimestamp(id_historical, ib_contract, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
         }
         #endregion
     }

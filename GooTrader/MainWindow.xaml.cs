@@ -20,8 +20,6 @@ namespace IBSampleApp
         // Need an instance of the view model so we can bind to UI
         public ViewModel vm = new ViewModel();
 
-        public FSM_DownloadHistoricalData fsm_hd = new FSM_DownloadHistoricalData();
-
         public MainWindow()
         {
             InitializeComponent();
@@ -32,13 +30,16 @@ namespace IBSampleApp
             // MessageLogger is static class, so need to assign a messages collection. Use the one from the Viewmodel as UI binding is already set.
             MessageLogger.messages = ViewModel.Messages;
 
+            FSM_DownloadHistoricalData fsd = new FSM_DownloadHistoricalData();
+            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotContractDetails);
+            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotHeadTimeStamp);
+
+
             // System timer for clock
             DispatcherTimer sysClock = new DispatcherTimer();
             sysClock.Interval = TimeSpan.FromSeconds(1);
             sysClock.Tick += SysClock_Tick;
             sysClock.Start();
-
-            //fsm_hd.Initialize();
         }
 
         // 1 second tick timer for updating clock
