@@ -30,10 +30,6 @@ namespace IBSampleApp
             // MessageLogger is static class, so need to assign a messages collection. Use the one from the Viewmodel as UI binding is already set.
             MessageLogger.messages = ViewModel.Messages;
 
-            FSM_DownloadHistoricalData fsd = new FSM_DownloadHistoricalData();
-            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotContractDetails);
-            fsd.FireEvent(FSM_DownloadHistoricalData.Events.GotHeadTimeStamp);
-
             // System timer for clock
             DispatcherTimer sysClock = new DispatcherTimer();
             sysClock.Interval = TimeSpan.FromSeconds(1);

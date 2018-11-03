@@ -40,35 +40,11 @@ namespace IBSampleApp
         }
         #endregion
 
-        // The following is a rather roundabout way to update a bound property from an external static method
-        // This is due to the fact that we can't use the PropertyUpdate Invoke method because we don't have access to the instance
-        // Therefore, we do the following:
-        // - Create a static event, a class method to raise the event, and a class method to modify the bound property.
-        // - Added the modification method to the event in the constructor
-        // - In the external static method, call the method which raises the event.
-        // TODO: Convert this type of thing to a class so we can re-use. The class should also have the field we want to modify,
-        // so we will have to update the XAML binding as well
-        #region SetTwsConnectionState Event
-        public static event Action<bool> TwsConnectionStateChanged;
-
-        public static void RaiseTwsConnectionStateChangedEvent(bool state)
-        {
-            // Outside the class, an event can only be on left side (+=), so we need a helper function to do it.
-            if(TwsConnectionStateChanged == null)
-            {
-                // It should not be null since we assign it in the constructor. If it is, need to figure out why.
-                throw new NullReferenceException();
-            }
-            
-            TwsConnectionStateChanged(state);
-        }
-
         public void SetTwsConnectionState(bool state)
         {
             // From in here, we can update this property => PropertyUpdater works ok (we have this instance)
             IsTwsConnected = state;
         }
-        #endregion
 
         #region Constructor
         public ViewModel()
@@ -76,7 +52,9 @@ namespace IBSampleApp
             // Need to create an instance for each view item
             Contracts = new ObservableCollection<GooContract>();
             Messages = new ObservableCollection<LogMessage>();
-            TwsConnectionStateChanged += SetTwsConnectionState;
+
+            // Events to trigger updates in the UI
+            TWS.OnConnectionStatusChanged += this.SetTwsConnectionState;
         }
 
         #endregion Constructor
