@@ -12,14 +12,14 @@ namespace IBSampleApp
     /// </summary>
     public class Model
     {
-        // Contracts list. Keys are "Ticker_PrimaryExchange"
-        public static Dictionary<string, GooContract> Contracts = new Dictionary<string, GooContract>();
+        // Contracts list.
+        public Dictionary<string, GooContract> Contracts = new Dictionary<string, GooContract>();
 
         #region Constructor
         public Model()
         {
-
         }
+
         #endregion Constructor
     }
 }

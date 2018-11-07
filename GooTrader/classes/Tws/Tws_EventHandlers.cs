@@ -54,6 +54,7 @@ namespace IBSampleApp
         // TWS message response to real-time data: Bid/Ask update
         private static void Ibclient_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
         {
+            // This request id will be active for as long as the data subscription is valid
             GooContract c = GetDataRequestContract(bidask.ReqId, false);
             c.Bid = bidask.BidPrice;
             c.Ask = bidask.AskPrice;
@@ -62,6 +63,7 @@ namespace IBSampleApp
         // TWS message response to real-time data: Last update
         private static void Ibclient_tickByTickAllLast(messages.TickByTickAllLastMessage last)
         {
+            // This request id will be active as long as the data subscription is valid 
             GooContract c = GetDataRequestContract(last.ReqId, false);
             c.Last = last.Price;
         }
@@ -80,10 +82,26 @@ namespace IBSampleApp
             MessageLogger.LogMessage(msg);
         }
 
+        // Event to inform outside world a new contract is created
+        public static event Action<string, GooContract> OnNewContract;
+
+        // TWS has replied with all available contract details for a given request Id
         private static void Ibclient_ContractDetailsEnd(int reqId)
         {
-            // request has been processed for all months (if needed) so remove it from pending list.
-            DeleteContractRequest(reqId);
+            GooContract c = GetDataRequestContract(reqId, true);
+            
+            // TODO: Active month is front month. Near expiration this may not be the best.
+            c.TWSContractDetails = c.TWSContractDetailsList[0];
+
+            // Some details we want to break out for the UI
+            c.Expiration = c.TWSContractDetails.ContractMonth;
+            c.Name = c.TWSContractDetails.LongName;
+            c.Symbol = c.TWSContractDetails.MarketName;
+
+            string contractKey = GetContractKey(c.TWSContractDetails.Contract);
+            
+            // Notify outside world that a new contract has been created.
+            OnNewContract?.Invoke(contractKey, c);
 
             MessageLogger.LogMessage(String.Format("ContractDetails request {0} completed", reqId.ToString()));
         }
@@ -92,28 +110,13 @@ namespace IBSampleApp
         private static void Ibclient_ContractDetails(messages.ContractDetailsMessage msg_cd)
         {
             ContractDetails cd = msg_cd.ContractDetails;
-            var ib_contract = cd.Contract;
-            string contractKey = GetContractKey(ib_contract);
-            string logMsg = String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey);
-            MessageLogger.LogMessage(logMsg);
+            string contractKey = GetContractKey(cd.Contract);
+            GooContract c = GetDataRequestContract(msg_cd.RequestId, false);
 
-            // Contract is created only for first expiration received.
-            // TODO: Need to check this when front month is near expiration as it may not be the highest volume contract
-            if (Model.Contracts.ContainsKey(contractKey) == false)
-            {
-                var currentContract = new GooContract();
-                currentContract.TWSContractDetails = cd;
+            // TWS returns contracts in calendar order (front month first) so we preserve the order.
+            c.TWSContractDetailsList.Add(cd);
 
-                // TWS returns contracts in calendar order (front month first).
-                // First month is normally highest volume, so we'll use that for now
-                currentContract.Expiration = cd.ContractMonth;
-                currentContract.Name = cd.LongName;
-                currentContract.Symbol = cd.MarketName;
-
-                // Add this contract information to the model as well as the viewmodel
-                Model.Contracts.Add(contractKey, currentContract);
-                ViewModel.Contracts.Add(currentContract);
-            }
+            MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey));
         }
 
         // Error message handler. Handles both standard error codes as well as exceptions

@@ -40,12 +40,6 @@ namespace IBSampleApp
         }
         #endregion
 
-        public void SetTwsConnectionState(bool state)
-        {
-            // From in here, we can update this property => PropertyUpdater works ok (we have this instance)
-            IsTwsConnected = state;
-        }
-
         #region Constructor
         public ViewModel()
         {
@@ -53,8 +47,23 @@ namespace IBSampleApp
             Contracts = new ObservableCollection<GooContract>();
             Messages = new ObservableCollection<LogMessage>();
 
-            // Events to trigger updates in the UI
-            TWS.OnConnectionStatusChanged += this.SetTwsConnectionState;
+            // Events to trigger updates in the UI. Can't use lambdas since static means we dont have access to the instance.
+            // Normally we let the Model monitor things, but this is simple so use TWS directly
+            TWS.OnConnectionStatusChanged += TWS_OnConnectionStatusChanged;
+            TWS.OnNewContract += TWS_OnNewContract;
+        }
+
+        private void TWS_OnNewContract(string arg1, GooContract c)
+        {
+            if(Contracts.Contains(c) == false)
+            {
+                Contracts.Add(c);
+            }
+        }
+
+        private void TWS_OnConnectionStatusChanged(bool status)
+        {
+            IsTwsConnected = status;
         }
 
         #endregion Constructor

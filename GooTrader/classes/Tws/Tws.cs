@@ -26,6 +26,8 @@ namespace IBSampleApp
         // 1) Index the contract key given the data request Id
         // 2) Index the contract given the contract key
         private static Dictionary<int, string> datarequests = new Dictionary<int, string>();
+        // Used to maintain an internal catalog of all available contracts.
+        private static Dictionary<string, GooContract> contracts = new Dictionary<string, GooContract>();
 
         #region Constructor
         static TWS()
@@ -63,7 +65,7 @@ namespace IBSampleApp
             MessageLogger.LogMessage("Connection Lost!");
         }
 
-        // Associate a contract with a particular data request
+        // Associate a contract with a particular data request so we can look it up while handling events
         private static void AddContractRequest(int reqId, GooContract c)
         {
             string contractKey = GetContractKey(c.TWSContractDetails.Contract);
@@ -86,14 +88,14 @@ namespace IBSampleApp
             datarequests.Remove(reqId);
         }
 
-        // Get the contract associated with a given request (if any)
-        private static GooContract GetDataRequestContract(int reqId, bool isSingleUse)
+        // Get the contract associated with a given TWS equestId
+        private static GooContract GetDataRequestContract(int reqId, bool deleteAfterUse)
         {
             string contractKey = datarequests[reqId];
-            GooContract c = Model.Contracts[contractKey];
+            GooContract c = contracts[contractKey];
 
             // No need to keep track of this request any more if it was single-use only.
-            if (isSingleUse == true)
+            if (deleteAfterUse == true)
             {
                 DeleteContractRequest(reqId);
             }
@@ -132,14 +134,26 @@ namespace IBSampleApp
         /// </summary>
         public static void RequestContractDetails(string symbol, string sectype, string primaryExchange)
         {
+            // This is a throw-away contract used for requesting information. TWS will return ones that are fully populated
             IBApi.Contract requestContract = new Contract();
             requestContract.Symbol = symbol;
             requestContract.SecType = sectype;
             requestContract.Exchange = primaryExchange;
-            var req_id = GetOrderId();
+            var reqId = GetOrderId();
+
+            // New blank GooContract. TWS ContractDetails event will populate it.
+            GooContract c = new GooContract();
+            string contractKey = GetContractKey(requestContract);
+            
+            // Internal list
+            if (contracts.ContainsKey(contractKey) == false)
+            {
+                contracts.Add(contractKey, c);
+            }
 
             // Transmit request for details of all contracts as described above. Info will be returned via TWS events.
-            ibclient.ClientSocket.reqContractDetails(req_id, requestContract);
+            AddContractRequest(reqId, c);
+            ibclient.ClientSocket.reqContractDetails(reqId, requestContract);
         }
 
         /// <summary>
@@ -180,7 +194,7 @@ namespace IBSampleApp
         }
 
         /// <summary>
-        /// Generate a unique key based on specific contract details
+        /// Generate contract key based on specific data
         /// </summary>
         /// <param name="secType"></param>
         /// <param name="symbol"></param>

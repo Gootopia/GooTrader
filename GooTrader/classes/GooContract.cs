@@ -18,14 +18,19 @@ namespace IBSampleApp
     {
         // Properties below don't need UpdateProperty in the settor as ViewModel doesn't access them
         #region Standard Properties
-        // Information specific to IB Platform
         // Contract details for the given contract. Note that we must be specific enough when requesting details that
         // the details apply only to a single tradable instrument (i.e: futures contract). At most, the contract
         // differences should be limited to a single instrument with multiple expirations.
+
+        // Active TWS contract. This would be what is used for live data/orders, etc. (IB Contract is inside contract details).
         public IBApi.ContractDetails TWSContractDetails { get; set; }
+        
+        // All available contract details
+        public List<IBApi.ContractDetails> TWSContractDetailsList { get; set; }
 
         // Timestamp of the furthest out data that is available for this contract
         public string HeadTimeStampString { get; set; }
+        
         // Keeps track of where we are in the data request. We download one day at a time and need a separate request for each.
         public DateTime HistDataRequestDateTime { get; set; }
         #endregion

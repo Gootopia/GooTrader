@@ -17,6 +17,8 @@ namespace IBSampleApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Instance of the model
+        public Model m = new Model();
         // Need an instance of the view model so we can bind to UI
         public ViewModel vm = new ViewModel();
 
