@@ -69,7 +69,12 @@ namespace IBSampleApp
         private static void AddContractRequest(int reqId, GooContract c)
         {
             string contractKey = GetContractKey(c.TWSContractDetails.Contract);
+            AddContractRequest(reqId, contractKey);
+        }
 
+        // Also need a way to associate the contract if we only have the key and not the actual contract
+        private static void AddContractRequest(int reqId, string contractKey)
+        {
             // Need to add this request so we can look up what contract is related to the reqId when we receive the events
             if (datarequests.ContainsKey(reqId) == false)
             {
@@ -152,7 +157,7 @@ namespace IBSampleApp
             }
 
             // Transmit request for details of all contracts as described above. Info will be returned via TWS events.
-            AddContractRequest(reqId, c);
+            AddContractRequest(reqId, contractKey);
             ibclient.ClientSocket.reqContractDetails(reqId, requestContract);
         }
 

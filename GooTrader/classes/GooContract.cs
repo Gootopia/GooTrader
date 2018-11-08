@@ -24,9 +24,9 @@ namespace IBSampleApp
 
         // Active TWS contract. This would be what is used for live data/orders, etc. (IB Contract is inside contract details).
         public IBApi.ContractDetails TWSContractDetails { get; set; }
-        
-        // All available contract details
-        public List<IBApi.ContractDetails> TWSContractDetailsList { get; set; }
+
+        // All available contract detail instances for this particular instrument
+        public List<IBApi.ContractDetails> TWSContractDetailsList = new List<IBApi.ContractDetails>();
 
         // Timestamp of the furthest out data that is available for this contract
         public string HeadTimeStampString { get; set; }
