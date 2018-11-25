@@ -25,30 +25,30 @@ namespace IBSampleApp
         }
 
         // Received packet of historical data from TWS
-        private static void Ibclient_HistoricalData(messages.HistoricalDataMessage hdata)
+        private static void Ibclient_HistoricalData(messages.HistoricalDataMessage hData)
         {
-            var msg = String.Format("Time={0},Open={1},High={2},Low={3},Close={4}", hdata.Date, hdata.Open, hdata.High, hdata.Low, hdata.Close);
-            MessageLogger.LogMessage(msg);
+            GooContract c = GetDataRequestContract(hData.RequestId, true);
         }
 
         // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
         private static void Ibclient_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
         {
             GooContract c = GetDataRequestContract(headTimeStamp.ReqId, true);
-            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
+            DeleteContractRequest(headTimeStamp.ReqId);
 
-            int histDataReqId = GetOrderId();
+            // Head time stamp is only used for processing download data
+            c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, c);
+            //c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
+
+            //int histDataReqId = GetOrderId();
 
             // Start requesting historical data 1 day at a time. We'll go until we hit the head time stamp.
-            c.HistDataRequestDateTime = DateTime.Now;
-            var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
+            //c.HistDataRequestDateTime = DateTime.Now;
+            //var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
 
             // Add a new data request
-            AddContractRequest(histDataReqId, c);
+            //AddContractRequest(histDataReqId, c);
 
-            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
-            ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
-                TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
         }
 
         // TWS message response to real-time data: Bid/Ask update

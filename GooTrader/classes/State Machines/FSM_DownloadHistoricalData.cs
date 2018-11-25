@@ -13,32 +13,33 @@ namespace IBSampleApp
         {
             Initialize,
             GetHeadTimeStamp,
-            RequestHistoricalData,
-            StoreData,
-            SelectNextDownloadDate,
+            StartHistoricalDownload,
+            DataReceived,
+            RequestDone,
             Terminate
         }
 
         // All valid transition events.
         public enum Events
         {
-            GotContractDetails,
-            GotHeadTimeStamp,
-            GotHistoricalDataPacket,
-            HistoricalRequestDone,
-            AllDataReceived
+            Initialized,
+            HeadTimeStamp,
+            HistoricalData,
+            HistoricalDataEnd,
+            DownloadNextDay,
+            Finished
         }
 
         // Valid state transitions
         protected StateTransition[] Transitions = new StateTransition[]
         {
-            new StateTransition(States.Initialize, Events.GotContractDetails, States.GetHeadTimeStamp),
-            new StateTransition(States.GetHeadTimeStamp, Events.GotHeadTimeStamp, States.RequestHistoricalData),
-            new StateTransition(States.RequestHistoricalData, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.StoreData, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.StoreData, Events.HistoricalRequestDone, States.SelectNextDownloadDate),
-            new StateTransition(States.SelectNextDownloadDate, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.SelectNextDownloadDate, Events.AllDataReceived, States.Terminate)
+            new StateTransition(States.Initialize, Events.Initialized, States.GetHeadTimeStamp),
+            new StateTransition(States.GetHeadTimeStamp, Events.HeadTimeStamp, States.StartHistoricalDownload),
+            new StateTransition(States.StartHistoricalDownload, Events.HistoricalData, States.DataReceived),
+            new StateTransition(States.DataReceived, Events.HistoricalData, States.DataReceived),
+            new StateTransition(States.DataReceived, Events.HistoricalDataEnd, States.RequestDone),
+            new StateTransition(States.RequestDone, Events.DownloadNextDay, States.StartHistoricalDownload),
+            new StateTransition(States.RequestDone, Events.Finished, States.Terminate)
         };
         #endregion
 
@@ -66,24 +67,25 @@ namespace IBSampleApp
         }
         #endregion
 
-        // Methods for individual states. Should be private or protected as they shouldn't need to be called directly
+        // Methods for individual states. Should be private or protected as they shouldn't need to be called directly.
+        // NOTE: NAMES NEED TO MATCH STATES EXACTLY OR EXCEPTIONS WILL BE GENERATED!
         #region State Methods
         private void GetHeadTimeStamp(GooContract c)
         {
-            //throw new NotImplementedException();
+            TWS.RequestHeadTimeStamp(c);
         }
 
-        private void RequestHistoricalData(GooContract c)
+        private void StartHistoricalDownload(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        private void StoreData(GooContract c)
+        private void DataReceived(GooContract c)
         {
             throw new NotImplementedException();
         }
 
-        private void SelectNextDownloadDate(GooContract c)
+        private void RequestDone(GooContract c)
         {
             throw new NotImplementedException();
         }

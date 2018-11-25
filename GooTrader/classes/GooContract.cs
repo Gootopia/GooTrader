@@ -10,7 +10,7 @@ namespace IBSampleApp
     // Container class with all required state machines for implementing TWS operations.
     public class TWSFiniteStateMachines
     {
-        public readonly FSM_DownloadHistoricalData DownloadHistoricalData;
+        public readonly FSM_DownloadHistoricalData DownloadHistoricalData = new FSM_DownloadHistoricalData();
     }
 
     // Information about a specific trading instrument

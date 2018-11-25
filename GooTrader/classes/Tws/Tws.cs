@@ -26,6 +26,7 @@ namespace IBSampleApp
         // 1) Index the contract key given the data request Id
         // 2) Index the contract given the contract key
         private static Dictionary<int, string> datarequests = new Dictionary<int, string>();
+        
         // Used to maintain an internal catalog of all available contracts.
         private static Dictionary<string, GooContract> contracts = new Dictionary<string, GooContract>();
 
@@ -65,14 +66,37 @@ namespace IBSampleApp
             MessageLogger.LogMessage("Connection Lost!");
         }
 
-        // Associate a contract with a particular data request so we can look it up while handling events
+        /// <summary>
+        /// Get a new request id and associate a contract with it.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns>new request id</returns>
+        private static int AddContractRequest(GooContract c)
+        {
+            int reqId = GetOrderId();
+            AddContractRequest(reqId, c);
+
+            // Return in case it is needed for use in a TWS call.
+            return reqId;
+        }
+
+        /// <summary>
+        /// Associate contract with a specifc request id
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="c"></param>
         private static void AddContractRequest(int reqId, GooContract c)
         {
             string contractKey = GetContractKey(c.TWSContractDetails.Contract);
             AddContractRequest(reqId, contractKey);
         }
 
-        // Also need a way to associate the contract if we only have the key and not the actual contract
+        /// <summary>
+        /// Associate contract with specific request id.
+        /// Use if you have contract key and not the GooContract
+        /// </summary>
+        /// <param name="reqId"></param>
+        /// <param name="contractKey"></param>
         private static void AddContractRequest(int reqId, string contractKey)
         {
             // Need to add this request so we can look up what contract is related to the reqId when we receive the events
@@ -87,7 +111,7 @@ namespace IBSampleApp
             }
         }
 
-        // Remove the association between a contract and the data request
+        // Remove the association between a contract and the data request when it is no longer needed
         private static void DeleteContractRequest(int reqId)
         {
             datarequests.Remove(reqId);
@@ -131,34 +155,6 @@ namespace IBSampleApp
             {
                 throw new Exception();
             }
-        }
-
-        /// <summary>
-        /// Request full contract details based on some initial specifications.
-        /// Enough info should be provided so that only a single instrument type (FUT,Stock) will be returned.
-        /// </summary>
-        public static void RequestContractDetails(string symbol, string sectype, string primaryExchange)
-        {
-            // This is a throw-away contract used for requesting information. TWS will return ones that are fully populated
-            IBApi.Contract requestContract = new Contract();
-            requestContract.Symbol = symbol;
-            requestContract.SecType = sectype;
-            requestContract.Exchange = primaryExchange;
-            var reqId = GetOrderId();
-
-            // New blank GooContract. TWS ContractDetails event will populate it.
-            GooContract c = new GooContract();
-            string contractKey = GetContractKey(requestContract);
-            
-            // Internal list
-            if (contracts.ContainsKey(contractKey) == false)
-            {
-                contracts.Add(contractKey, c);
-            }
-
-            // Transmit request for details of all contracts as described above. Info will be returned via TWS events.
-            AddContractRequest(reqId, contractKey);
-            ibclient.ClientSocket.reqContractDetails(reqId, requestContract);
         }
 
         /// <summary>
@@ -214,7 +210,48 @@ namespace IBSampleApp
         }
 
         /// <summary>
-        /// Request tick market data (Level I bid/ask/last)
+        /// Request full contract details based on some initial specifications.
+        /// Enough info should be provided so that only a single instrument type (FUT,Stock) will be returned.
+        /// </summary>
+        public static GooContract GetContractDetails(string symbol, string sectype, string primaryExchange)
+        {
+            // This is a throw-away contract used for requesting information. TWS will return ones that are fully populated
+            IBApi.Contract requestContract = new Contract();
+            requestContract.Symbol = symbol;
+            requestContract.SecType = sectype;
+            requestContract.Exchange = primaryExchange;
+            var reqId = GetOrderId();
+
+            // New blank GooContract. TWS ContractDetails event will populate it.
+            GooContract c = new GooContract();
+            string contractKey = GetContractKey(requestContract);
+
+            // Internal list
+            if (contracts.ContainsKey(contractKey) == false)
+            {
+                contracts.Add(contractKey, c);
+            }
+
+            // Transmit request for details of all contracts as described above. Info will be returned via TWS events.
+            AddContractRequest(reqId, contractKey);
+            ibclient.ClientSocket.reqContractDetails(reqId, requestContract);
+
+            // We can look it up with the contract key as well.
+            return c;
+        }
+
+        /// <summary>
+        /// Download all available historical data for a given contract from TWS server
+        /// </summary>
+        /// <param name="c"></param>
+        public static void GetHistoricalData(GooContract c)
+        {
+            // Historical data is retrieved using a state machine
+            c.FSM.DownloadHistoricalData.Start(c);
+        }
+
+        /// <summary>
+        /// Wrapper to request tick market data (Level I bid/ask/last)
         /// </summary>
         /// <param name="cd"></param>
         public static void RequestTickData(GooContract c)
@@ -230,17 +267,30 @@ namespace IBSampleApp
         }
 
         /// <summary>
-        /// Submit request for historical data
+        /// Wrapper to request historical data starting point for a given contract
+        /// </summary>
+        /// <param name="c"></param>
+        public static void RequestHeadTimeStamp(GooContract c)
+        {
+            int id_historical = GetOrderId();
+            AddContractRequest(id_historical, c);
+
+            var ib_contract = c.TWSContractDetails.Contract;
+            ibclient.ClientSocket.reqHeadTimestamp(id_historical, ib_contract, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
+        }
+
+        /// <summary>
+        /// Wrapper to submit request for historical data
         /// </summary>
         /// <param name="c"></param>
         public static void RequestHistoricalData(GooContract c)
         {
-            int id_historical = GetOrderId();
-            AddContractRequest(id_historical, c);
-            var ib_contract = c.TWSContractDetails.Contract;
+            // Get a new order id for historical data request
+            int histDataReqId = AddContractRequest(c);
             
-            // Find out how much data is available for given contract. Once we know that, we can submit for data in "chunks" (due to TWS data limits)
-            ibclient.ClientSocket.reqHeadTimestamp(id_historical, ib_contract, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
+            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
+            //ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
+            //    TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
         }
         #endregion
     }

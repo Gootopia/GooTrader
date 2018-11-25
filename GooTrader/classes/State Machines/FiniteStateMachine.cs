@@ -37,6 +37,9 @@ namespace IBSampleApp
         private static string _initializeStateName = "Initialize";
         private static string _terminateStateName = "Terminate";
 
+        // used to make the initial state transition from entry state
+        private static string _initalizedEventName = "Initialized";
+
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
         protected virtual void Initialize() { }
@@ -82,10 +85,11 @@ namespace IBSampleApp
 
         #region Methods
         /// <summary>
-        /// Generate event to transition from one state to another
+        /// Generate transition event
         /// </summary>
-        /// <param name="newEvent"></param>
-        public void FireEvent(Enum newEvent)
+        /// <param name="newEvent">Event to generate</param>
+        /// <param name="eventArg">argument to pass (default=null)</param>
+        public void FireEvent(Enum newEvent, object eventArg=null)
         {
             Type enumType = this.GetEvents();
             Type eventType = newEvent.GetType();
@@ -94,8 +98,23 @@ namespace IBSampleApp
             // just making sure we didn't send in the wrong type by accident.
             if(eventType == enumType)
             {
-                _fsm.Fire(newEvent.ToString());
+                _fsm.Fire(newEvent.ToString(), eventArg);
+            } else
+            {
+                throw new NotSupportedException("Invalid Enum Type");
             }
+        }
+
+        /// <summary>
+        /// Start execution of a FSM
+        /// </summary>
+        /// <param name="eventArg">argument to pass (default=null)</param>
+        public void Start(object eventArg=null)
+        {
+            // Start the FSM. This will call the "Initialized" state
+            _fsm.Start();
+            // Initial transition from Entry to first state
+            _fsm.Fire(_initalizedEventName, eventArg);
         }
         #endregion
 

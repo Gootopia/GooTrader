@@ -19,14 +19,18 @@ namespace IBSampleApp
             TWS.Connect();
         }
 
+
+        GooContract sp500, nq100;
+        
         private void btnReqContracts_Click(object sender, RoutedEventArgs e)
         {
-            TWS.RequestContractDetails("ES", "FUT", TWSInfo.TWS_Exchanges.Globex);
-            TWS.RequestContractDetails("NQ", "FUT", TWSInfo.TWS_Exchanges.Globex);
+            sp500 = TWS.GetContractDetails("ES", "FUT", TWSInfo.TWS_Exchanges.Globex);
+            nq100 = TWS.GetContractDetails("NQ", "FUT", TWSInfo.TWS_Exchanges.Globex);
         }
 
         private void btnReqData_Click(object sender, RoutedEventArgs e)
         {
+            TWS.GetHistoricalData(sp500);
         }
     }
 }
