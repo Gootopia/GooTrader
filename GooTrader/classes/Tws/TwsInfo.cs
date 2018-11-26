@@ -1,11 +1,4 @@
-﻿using IBApi;
-using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Windows;
-
-namespace IBSampleApp
+﻿namespace IBSampleApp
 {
     // Static classes with a bunch of TWS related strings used for client requests.
     public static class TWSInfo

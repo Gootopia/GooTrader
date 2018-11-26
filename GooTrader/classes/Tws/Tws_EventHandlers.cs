@@ -1,10 +1,5 @@
 ﻿using IBApi;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Windows;
 
 namespace IBSampleApp
 {
@@ -21,6 +16,7 @@ namespace IBSampleApp
         // Received final packet of data for the duration requested in the current historical data request.
         private static void Ibclient_HistoricalDataEnd(messages.HistoricalDataEndMessage hDataEnd)
         {
+            DeleteContractRequest(hDataEnd.RequestId);
             GooContract c = GetDataRequestContract(hDataEnd.RequestId, true);
         }
 
@@ -28,6 +24,10 @@ namespace IBSampleApp
         private static void Ibclient_HistoricalData(messages.HistoricalDataMessage hData)
         {
             GooContract c = GetDataRequestContract(hData.RequestId, true);
+            OHLCData quote = new OHLCData(hData.Date, hData.Open, hData.High, hData.Low, hData.Close);
+
+            FSM_EventArgs e = new FSM_EventArgs(c, quote);
+            c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HistoricalData, e);
         }
 
         // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
@@ -37,18 +37,9 @@ namespace IBSampleApp
             DeleteContractRequest(headTimeStamp.ReqId);
 
             // Head time stamp is only used for processing download data
-            c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, c);
-            //c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
-
-            //int histDataReqId = GetOrderId();
-
-            // Start requesting historical data 1 day at a time. We'll go until we hit the head time stamp.
-            //c.HistDataRequestDateTime = DateTime.Now;
-            //var startStr = c.HistDataRequestDateTime.ToString(TWSInfo.TWS_TimeStampFormat);
-
-            // Add a new data request
-            //AddContractRequest(histDataReqId, c);
-
+            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
+            FSM_EventArgs e = new FSM_EventArgs(c);
+            c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, e);
         }
 
         // TWS message response to real-time data: Bid/Ask update
@@ -82,7 +73,7 @@ namespace IBSampleApp
             MessageLogger.LogMessage(msg);
         }
 
-        // Event to inform outside world a new contract is created
+        // Event to inform outside world a new contract is created (after receiving ContractDetails from TWS)
         public static event Action<string, GooContract> OnNewContract;
 
         // TWS has replied with all available contract details for a given request Id
@@ -135,6 +126,7 @@ namespace IBSampleApp
             MessageLogger.LogMessage(errMsg);
         }
 
+        // TWS connection closed
         private static void Ibclient_ConnectionClosed()
         {
             throw new NotImplementedException();

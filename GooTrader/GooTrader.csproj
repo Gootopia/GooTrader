@@ -141,6 +141,7 @@
     <Compile Include="classes\Tws\Tws.cs" />
     <Compile Include="classes\Tws\TwsInfo.cs" />
     <Compile Include="classes\Tws\Tws_EventHandlers.cs" />
+    <Compile Include="classes\Tws\TWS_Wrappers.cs" />
     <Compile Include="classes\UIThread.cs" />
     <Compile Include="classes\MVVM\ViewModel.cs" />
     <Compile Include="classes\MVVM\ViewModelCode.cs" />

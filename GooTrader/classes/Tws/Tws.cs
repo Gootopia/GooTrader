@@ -1,10 +1,7 @@
 ﻿using IBApi;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Windows;
 
 namespace IBSampleApp
 {
@@ -247,50 +244,8 @@ namespace IBSampleApp
         public static void GetHistoricalData(GooContract c)
         {
             // Historical data is retrieved using a state machine
-            c.FSM.DownloadHistoricalData.Start(c);
-        }
-
-        /// <summary>
-        /// Wrapper to request tick market data (Level I bid/ask/last)
-        /// </summary>
-        /// <param name="cd"></param>
-        public static void RequestTickData(GooContract c)
-        {
-            int id_last = GetOrderId();
-            int id_bidask = GetOrderId();
-            var ib_contract = c.TWSContractDetails.Contract;
-            string contractKey = GetContractKey(ib_contract);
-            AddContractRequest(id_last, c);
-            AddContractRequest(id_bidask, c);
-            ibclient.ClientSocket.reqTickByTickData(id_last, ib_contract, TWSInfo.TWS_TickType.Last, 0, false);
-            ibclient.ClientSocket.reqTickByTickData(id_bidask, ib_contract, TWSInfo.TWS_TickType.BidAsk, 0, false);
-        }
-
-        /// <summary>
-        /// Wrapper to request historical data starting point for a given contract
-        /// </summary>
-        /// <param name="c"></param>
-        public static void RequestHeadTimeStamp(GooContract c)
-        {
-            int id_historical = GetOrderId();
-            AddContractRequest(id_historical, c);
-
-            var ib_contract = c.TWSContractDetails.Contract;
-            ibclient.ClientSocket.reqHeadTimestamp(id_historical, ib_contract, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
-        }
-
-        /// <summary>
-        /// Wrapper to submit request for historical data
-        /// </summary>
-        /// <param name="c"></param>
-        public static void RequestHistoricalData(GooContract c)
-        {
-            // Get a new order id for historical data request
-            int histDataReqId = AddContractRequest(c);
-            
-            // Submit initial request for 1-min historical data. Subsequent requests will come from HistoricalData events until all data is obtained.
-            //ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
-            //    TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
+            FSM_EventArgs e = new FSM_EventArgs(c);
+            c.FSM.DownloadHistoricalData.Start(e);
         }
         #endregion
     }
