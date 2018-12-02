@@ -40,6 +40,26 @@ namespace IBSampleApp
         }
         #endregion
 
+        // Most recent historical data contract
+        #region LastContract
+        private string _lastContract;
+        public string LastContract
+        {
+            get { return _lastContract; }
+            set => UpdateProperty(ref _lastContract, value);
+        }
+        #endregion
+
+        // Most recent historical data request
+        #region LastDownloadTime
+        private DateTime _lastDownloadTime;
+        public DateTime LastDownloadTime
+        {
+            get { return _lastDownloadTime; }
+            set => UpdateProperty(ref _lastDownloadTime, value);
+        }
+        #endregion
+
         #region Constructor
         public ViewModel()
         {

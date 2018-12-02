@@ -29,7 +29,8 @@ namespace IBSampleApp
     public class FiniteStateMachine
     {
         // Internal state machine. See Appccelerate docs for other types
-        private PassiveStateMachine<string, string> _fsm = new PassiveStateMachine<string, string>();
+        private ActiveStateMachine<string, string> _fsm = new ActiveStateMachine<string, string>();
+        
         // These two states are for initialization and cleanup
         private static string _initializeStateName = "Initialize";
         private static string _terminateStateName = "Terminate";

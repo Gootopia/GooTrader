@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 
 // Use default namespace so we don't have to rename stuff when updating to a new TWS API
@@ -8,7 +9,7 @@ namespace IBSampleApp
     public class OHLCData
     {
         public string BarSize;
-        public ListDictionary Data = new ListDictionary();
+        public Dictionary<string, OHLCQuote> Data = new Dictionary<string, OHLCQuote>();
     }
 
     // Single OHLC bar

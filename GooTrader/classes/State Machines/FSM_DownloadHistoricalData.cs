@@ -25,7 +25,7 @@ namespace IBSampleApp
     public class FSM_DownloadHistoricalData : FiniteStateMachine
     {
         public FSM_DownloadHistoricalData(GooContract c) : base(c) { }
-
+        
         // These define the state and event names and the transitions
         #region FSM Definition
         // All valid states
@@ -109,7 +109,7 @@ namespace IBSampleApp
         {
             // Convert head time stamp to DateTime for processing convenience later on.
             var headTimeStampString = e.Payload as string;
-            DateTime dt = DateTime.ParseExact(headTimeStampString, TWSInfo.TWS_TimeStampFormat, CultureInfo.InvariantCulture);
+            DateTime dt = DateTime.ParseExact(headTimeStampString, TWSInfo.TimeStampStringFormat, CultureInfo.InvariantCulture);
             e.Contract.HeadTimeStamp = dt;
 
             // We'll work backwards to the headtimestamp from current time
@@ -122,13 +122,14 @@ namespace IBSampleApp
         private void DownloadHistoricalData(FSM_EventArgs e)
         {
             // Submit a request for 24 hours of 1-min data
-            TWS.RequestHistoricalData(e.Contract, e.Contract.HistRequestTimeStamp, TWSInfo.TWS_StepSizes.Day_1, TWSInfo.TWS_BarSizeSetting.Min_1);
+            TWS.RequestHistoricalData(e.Contract, e.Contract.HistRequestTimeStamp, TWSInfo.HistoricalDataStepSizes.Day_1, TWSInfo.BarSizeSetting.Min_1);
         }
 
         private void DataReceived(FSM_EventArgs e)
         {         
             OHLCQuote dataBar = e.Payload as OHLCQuote;
-            if(e.Contract.HistoricalData.Data.Contains(dataBar.Date) == false)
+
+            if(e.Contract.HistoricalData.Data.ContainsKey(dataBar.Date) == false)
             {
                 e.Contract.HistoricalData.Data.Add(dataBar.Date, dataBar);
             }
@@ -144,7 +145,9 @@ namespace IBSampleApp
             if(DateTime.Compare(c.HeadTimeStamp, c.HistRequestTimeStamp) < 0)
             {
                 FireEvent(FSM_DownloadHistoricalData.Events.DownloadNextDay, e);
-                MessageLogger.LogMessage(e.Contract.HistRequestTimeStamp.ToString());
+
+                string msg = String.Format("{0}: {1}", e.Contract.Symbol, e.Contract.HistRequestTimeStamp.ToString());
+                MessageLogger.LogMessage(msg);
             }
             else
             {

@@ -8,34 +8,34 @@
         /// </summary>
         #region TWS Information Classes
         // Defines the various exchanges.
-        public static class TWS_Exchanges
+        public static class Exchanges
         {
             public static string Globex = "GLOBEX";
             //TODO: Add GetPrimaryExchange(ticker) to pick the right exchange for a given symbol as there may be multiple
         }
 
         // Allowed security types (STK, FUT, etc.)
-        public static class TWS_SecType
+        public static class SecurityType
         {
             public static string Future = "FUT";
         }
 
         // Data types for Top market data (Level 1)
-        public static class TWS_TickType
+        public static class TickType
         {
             public static string Last = "Last";
             public static string BidAsk = "BidAsk";
         }
 
         // Real-Time Hours data only
-        public static class TWS_UseRTHOnly
+        public static class UseRealTimeHoursOnly
         {
             public static int No = 0;
             public static int Yes = 1;
         }
 
         // Types of price data
-        public static class TWS_WhatToShow
+        public static class WhatTicksToShow
         {
             public static string Bid = "BID";
             public static string Ask = "ASK";
@@ -44,7 +44,7 @@
         }
 
         // Historical data bar size
-        public static class TWS_BarSizeSetting
+        public static class BarSizeSetting
         {
             public static string Min_1 = "1 min";
             public static string Min_2 = "2 mins";
@@ -65,7 +65,7 @@
         }
 
         // Historical data step sizes
-        public static class TWS_StepSizes
+        public static class HistoricalDataStepSizes
         {
             public static string Sec_60 = "60 S";
             public static string Sec_120 = "120 S";
@@ -81,7 +81,7 @@
         }
 
         // Price Data Timestamp format
-        public static class TWS_FormatDate
+        public static class TimeStampType
         {
             // Format is "yyyyMMdd HH:mm:ss"
             public static int Standard = 1;
@@ -90,7 +90,7 @@
         }
 
         // Note that TWS timestamp strings have TWO spaces between day and hour!
-        public static string TWS_TimeStampFormat = "yyyyMMdd  HH:mm:ss";
+        public static string TimeStampStringFormat = "yyyyMMdd  HH:mm:ss";
     }
     #endregion
 }

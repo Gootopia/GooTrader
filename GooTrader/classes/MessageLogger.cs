@@ -32,6 +32,7 @@ namespace IBSampleApp
         /// <summary>
         /// LogMessage(string msg)
         /// Timestamps a message with the current time and inserts it at the head of the message log
+        /// Can be called from any thread
         /// </summary>
         /// <param name="msg"></param>
         static public void LogMessage(string msg, LogMessageType type = LogMessageType.INFO)
@@ -40,7 +41,9 @@ namespace IBSampleApp
             if (messages == null) throw new NullReferenceException();
 
             // Insert message at the head of the log so it shows up at the top.
-            messages.Insert(0, newLogEntry);
+            // messages.Insert(0, newLogEntry);
+            // Can be called from any thread
+            UIThread.Update(() => { messages.Insert(0, newLogEntry);  });
         }
 
         #endregion
