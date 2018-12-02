@@ -13,7 +13,7 @@ namespace IBSampleApp
         {
             int id_last = GetOrderId();
             int id_bidask = GetOrderId();
-            var ib_contract = c.TWSContractDetails.Contract;
+            var ib_contract = c.TWSActiveContractDetails.Contract;
             string contractKey = GetContractKey(ib_contract);
             AddContractRequest(id_last, c);
             AddContractRequest(id_bidask, c);
@@ -30,7 +30,7 @@ namespace IBSampleApp
             int id_historical = GetOrderId();
             AddContractRequest(id_historical, c);
 
-            var ib_contract = c.TWSContractDetails.Contract;
+            var ib_contract = c.TWSActiveContractDetails.Contract;
             ibclient.ClientSocket.reqHeadTimestamp(id_historical, ib_contract, TWSInfo.TWS_WhatToShow.Trades, TWSInfo.TWS_UseRTHOnly.No, TWSInfo.TWS_FormatDate.Standard);
         }
 
@@ -46,10 +46,11 @@ namespace IBSampleApp
             // Get a new order id for historical data request
             int histDataReqId = AddContractRequest(c);
 
+            // TWS requires date to be in a specific format, so must convert from DateTime
             var startStr = downloadDate.ToString(TWSInfo.TWS_TimeStampFormat);
 
-            // Submit request to tws based on the desired download criteria
-            ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSContractDetails.Contract, startStr,
+            // Submit request to tws based on the desired download criteria for the active contract
+            ibclient.ClientSocket.reqHistoricalData(histDataReqId, c.TWSActiveContractDetails.Contract, startStr,
                 twsinfo_stepsize, twsinfo_barsize, TWSInfo.TWS_WhatToShow.Trades, 0, 1, false, null);
         }
     }

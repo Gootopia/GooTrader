@@ -28,9 +28,6 @@ namespace IBSampleApp
     // Finite state machine class
     public class FiniteStateMachine
     {
-        // Convenience fields to identify the Enums used for States and Events definition in every FSM
-        private static string StatesEnumName = "States";
-
         // Internal state machine. See Appccelerate docs for other types
         private PassiveStateMachine<string, string> _fsm = new PassiveStateMachine<string, string>();
         // These two states are for initialization and cleanup
@@ -39,6 +36,9 @@ namespace IBSampleApp
 
         // used to make the initial state transition from entry state
         private static string _initalizedEventName = "Initialized";
+
+        // object which is using the FSM. Can store custom data
+        private Object _fsmObject;
 
         // Required state methods. Normally they do nothing, but they can be overridden.
         #region State Methods
@@ -59,6 +59,19 @@ namespace IBSampleApp
         protected virtual Type GetStates()
         {
             throw new NotImplementedException();
+        }
+
+        // Return typeof(YourMainObject).
+        protected virtual Type GetHostType()
+        {
+            // This is the object type of whatever is using the FSM.
+            throw new NotImplementedException();
+        }
+
+        // Return instance of the FSM host object for use by the FSM states.
+        protected Object GetHostInstance()
+        {
+            return _fsmObject;
         }
 
         // Return array of your StateTransitions
@@ -118,13 +131,17 @@ namespace IBSampleApp
         }
         #endregion
 
-        // Constructor
         /// <summary>
-        /// FSM Constructor
+        /// Constructor
         /// </summary>
-        /// <param name="startFSM">true=>start FSM.</param>
-        public FiniteStateMachine(bool startFSM=true, bool assignActionsManually=false)
+        /// <param name="fsmObj">The object instance which uses this FSM. If not data stored, can be null</param>
+        /// <param name="startFSM">true=>FSM starts immediately upon construction</param>
+        /// <param name="assignActionsManually">false</param>
+        public FiniteStateMachine(object fsmObj, bool startFSM=true, bool assignActionsManually=false)
         {
+            // Save instance of object that is using the FSM so it can be accessed later by the FSM.
+            _fsmObject = fsmObj;
+            
             Type states = this.GetStates();
             Type events = this.GetEvents();
             StateTransition[] transitions = this.GetTransitions();
@@ -180,36 +197,38 @@ namespace IBSampleApp
         // contains some reflection code we may want to use later. Ignore it for now
         private void Initialize2()
         {
-            Type classtype = this.GetType();
-            MethodInfo[] classmethods = Type.GetType(this.ToString()).GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            MemberInfo[] classmembers = classtype.GetMembers();
-            var qualifiedStateEnumName = String.Format("{0}.{1}+{2}", classtype.Namespace, classtype.Name, FiniteStateMachine.StatesEnumName);
-            var entryAssembly = Assembly.GetEntryAssembly();
-            string[] stateNames = null;
+            #region Old Example Code
+            //Type classtype = this.GetType();
+            //MethodInfo[] classmethods = Type.GetType(this.ToString()).GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            //MemberInfo[] classmembers = classtype.GetMembers();
+            //var qualifiedStateEnumName = String.Format("{0}.{1}+{2}", classtype.Namespace, classtype.Name, FiniteStateMachine.StatesEnumName);
+            //var entryAssembly = Assembly.GetEntryAssembly();
+            //string[] stateNames = null;
 
             // LINQ to pull the "States" enum from the class members so we can get a list of the FSM states
-            var stateEnum = from member in classmembers where member.Name == FiniteStateMachine.StatesEnumName select member;
-            if (stateEnum.Any())
-            {
-                var stateEnumType = entryAssembly.GetType(qualifiedStateEnumName);
-                stateNames = Enum.GetNames(stateEnumType);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            //var stateEnum = from member in classmembers where member.Name == FiniteStateMachine.StatesEnumName select member;
+            //if (stateEnum.Any())
+            //{
+            //    var stateEnumType = entryAssembly.GetType(qualifiedStateEnumName);
+            //   stateNames = Enum.GetNames(stateEnumType);
+            //}
+            //else
+            //{
+            //    throw new NotImplementedException();
+            //}
 
             // TODO: Assign execution for all defined states
-            foreach (string stateName in stateNames)
-            {
-                var stateMethod = from method in classmethods where method.Name == stateName select method;
+            //foreach (string stateName in stateNames)
+            //{
+            //    var stateMethod = from method in classmethods where method.Name == stateName select method;
 
-                if (!stateMethod.Any())
-                {
-                    throw new NotImplementedException();
-                }
-                Action methodAction = (Action)Delegate.CreateDelegate(typeof(Action), this, stateName);
-            }
+            //    if (!stateMethod.Any())
+            //    {
+            //        throw new NotImplementedException();
+            //    }
+            //    Action methodAction = (Action)Delegate.CreateDelegate(typeof(Action), this, stateName);
+            //}
+            #endregion
         }
     }
 

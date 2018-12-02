@@ -1,10 +1,18 @@
 ﻿using System;
+using System.Collections.Specialized;
 
 // Use default namespace so we don't have to rename stuff when updating to a new TWS API
 namespace IBSampleApp
 {
-    // Quote data packet
+    // Collection of OHLC bars
     public class OHLCData
+    {
+        public string BarSize;
+        public ListDictionary Data = new ListDictionary();
+    }
+
+    // Single OHLC bar
+    public class OHLCQuote
     {
         public string Date { get; set; }
         public double Open { get; set; }
@@ -12,7 +20,7 @@ namespace IBSampleApp
         public double Low { get; set; }
         public double Close { get; set; }
 
-        public OHLCData(string date, double open, double high, double low, double close)
+        public OHLCQuote(string date, double open, double high, double low, double close)
         {
             Date = date;
             Open = open;

@@ -10,7 +10,14 @@ namespace IBSampleApp
     // Container class with all required state machines for implementing TWS operations.
     public class TWSFiniteStateMachines
     {
-        public readonly FSM_DownloadHistoricalData DownloadHistoricalData = new FSM_DownloadHistoricalData();
+        // All the various state machines can go here
+        public FSM_DownloadHistoricalData DownloadHistoricalData { get; set; }
+
+        public TWSFiniteStateMachines(GooContract c)
+        {
+            // state machines need the FSM host so it can be accessed during execution of the FSM.
+            DownloadHistoricalData = new FSM_DownloadHistoricalData(c);
+        }
     }
 
     // Information about a specific trading instrument
@@ -23,16 +30,20 @@ namespace IBSampleApp
         // differences should be limited to a single instrument with multiple expirations.
 
         // Active TWS contract. This would be what is used for live data/orders, etc. (IB Contract is inside contract details).
-        public IBApi.ContractDetails TWSContractDetails { get; set; }
+        // For stocks, there is only one. For other stuff (futures), there could be multiple expirations, which are held in the list below
+        public IBApi.ContractDetails TWSActiveContractDetails { get; set; }
 
         // All available contract detail instances for this particular instrument
         public List<IBApi.ContractDetails> TWSContractDetailsList = new List<IBApi.ContractDetails>();
 
-        // Timestamp of the furthest out data that is available for this contract
-        public string HeadTimeStampString { get; set; }
+        // Timestamp of the furthest out data that is available for this contract. TWS returns a string, but DateTimes are easier to use
+        public DateTime HeadTimeStamp { get; set; }
         
         // Keeps track of where we are in the data request. We download one day at a time and need a separate request for each.
-        public DateTime HistDataRequestDateTime { get; set; }
+        public DateTime HistRequestTimeStamp { get; set; }
+
+        // Collection of all historical data for the contract. We only store data for one contract (the active one)
+        public OHLCData HistoricalData = new OHLCData();
         #endregion
 
         // Properties below should call UpdateProperty() in the settor as they could be referenced by the ViewModel
@@ -83,10 +94,13 @@ namespace IBSampleApp
         #endregion
 
         // This is used by TWS to perform various framework functions for this contract (data downloads, order processing, etc.)
-        public readonly TWSFiniteStateMachines FSM = new TWSFiniteStateMachines();
-        
+        public TWSFiniteStateMachines FSM { get; set; }
+
         public GooContract()
         {
+            // Save off the FSM host object for use during FSM execution
+            FSM = new TWSFiniteStateMachines(this);
+
             // Some dummy values just so we know we've got the correct binding
             Bid = 0.0;
             Ask = 1.0;

@@ -16,16 +16,21 @@ namespace IBSampleApp
         // Received final packet of data for the duration requested in the current historical data request.
         private static void Ibclient_HistoricalDataEnd(messages.HistoricalDataEndMessage hDataEnd)
         {
-            DeleteContractRequest(hDataEnd.RequestId);
+            // Data request is now completed = delete
             GooContract c = GetDataRequestContract(hDataEnd.RequestId, true);
+
+            FSM_EventArgs e = new FSM_EventArgs(c);
+            c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HistoricalDataEnd, e);
         }
 
         // Received packet of historical data from TWS
         private static void Ibclient_HistoricalData(messages.HistoricalDataMessage hData)
         {
-            GooContract c = GetDataRequestContract(hData.RequestId, true);
-            OHLCData quote = new OHLCData(hData.Date, hData.Open, hData.High, hData.Low, hData.Close);
+            // Data request is valid until HistoricalDataEnd is received.
+            GooContract c = GetDataRequestContract(hData.RequestId, false);
 
+            // Package the quote and send the data received event to the state machine.
+            OHLCQuote quote = new OHLCQuote(hData.Date, hData.Open, hData.High, hData.Low, hData.Close);
             FSM_EventArgs e = new FSM_EventArgs(c, quote);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HistoricalData, e);
         }
@@ -33,12 +38,11 @@ namespace IBSampleApp
         // TWS message response to request for how much data is available. Returns timestamp of furthest out data.
         private static void Ibclient_HeadTimestamp(messages.HeadTimestampMessage headTimeStamp)
         {
+            // Get contract. This request is finished, so don't need any more.
             GooContract c = GetDataRequestContract(headTimeStamp.ReqId, true);
-            DeleteContractRequest(headTimeStamp.ReqId);
-
-            // Head time stamp is only used for processing download data
-            c.HeadTimeStampString = headTimeStamp.HeadTimestamp;
-            FSM_EventArgs e = new FSM_EventArgs(c);
+            
+            // Send event to the download FSM to tell it the head time stamp has been received from TWS.
+            FSM_EventArgs e = new FSM_EventArgs(c, headTimeStamp.HeadTimestamp);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, e);
         }
 
@@ -79,17 +83,18 @@ namespace IBSampleApp
         // TWS has replied with all available contract details for a given request Id
         private static void Ibclient_ContractDetailsEnd(int reqId)
         {
+            // Details end means this request is done, so delete after it is accessed.
             GooContract c = GetDataRequestContract(reqId, true);
             
             // TODO: Active month is front month. Near expiration this may not be the best.
-            c.TWSContractDetails = c.TWSContractDetailsList[0];
+            c.TWSActiveContractDetails = c.TWSContractDetailsList[0];
 
             // Some details we want to break out for the UI
-            c.Expiration = c.TWSContractDetails.ContractMonth;
-            c.Name = c.TWSContractDetails.LongName;
-            c.Symbol = c.TWSContractDetails.MarketName;
+            c.Expiration = c.TWSActiveContractDetails.ContractMonth;
+            c.Name = c.TWSActiveContractDetails.LongName;
+            c.Symbol = c.TWSActiveContractDetails.MarketName;
 
-            string contractKey = GetContractKey(c.TWSContractDetails.Contract);
+            string contractKey = GetContractKey(c.TWSActiveContractDetails.Contract);
             
             // Notify outside world that a new contract has been created.
             OnNewContract?.Invoke(contractKey, c);
@@ -102,6 +107,8 @@ namespace IBSampleApp
         {
             ContractDetails cd = msg_cd.ContractDetails;
             string contractKey = GetContractKey(cd.Contract);
+
+            // Keep the request active until end is signaled by ContractDetailsEnd event.
             GooContract c = GetDataRequestContract(msg_cd.RequestId, false);
 
             // TWS returns contracts in calendar order (front month first) so we preserve the order.

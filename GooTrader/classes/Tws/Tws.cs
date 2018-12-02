@@ -84,7 +84,7 @@ namespace IBSampleApp
         /// <param name="c"></param>
         private static void AddContractRequest(int reqId, GooContract c)
         {
-            string contractKey = GetContractKey(c.TWSContractDetails.Contract);
+            string contractKey = GetContractKey(c.TWSActiveContractDetails.Contract);
             AddContractRequest(reqId, contractKey);
         }
 
@@ -108,13 +108,12 @@ namespace IBSampleApp
             }
         }
 
-        // Remove the association between a contract and the data request when it is no longer needed
-        private static void DeleteContractRequest(int reqId)
-        {
-            datarequests.Remove(reqId);
-        }
-
-        // Get the contract associated with a given TWS equestId
+        /// <summary>
+        /// Get contract associated with the data request
+        /// </summary>
+        /// <param name="reqId">request Id to associate (int)</param>
+        /// <param name="deleteAfterUse">true=>remove after lookup</param>
+        /// <returns></returns>
         private static GooContract GetDataRequestContract(int reqId, bool deleteAfterUse)
         {
             string contractKey = datarequests[reqId];
@@ -123,7 +122,7 @@ namespace IBSampleApp
             // No need to keep track of this request any more if it was single-use only.
             if (deleteAfterUse == true)
             {
-                DeleteContractRequest(reqId);
+                datarequests.Remove(reqId);
             }
             return c;
         }
