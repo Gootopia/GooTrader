@@ -17,10 +17,10 @@ namespace IBSampleApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Instance of the model
+        public Model m = new Model();
         // Need an instance of the view model so we can bind to UI
         public ViewModel vm = new ViewModel();
-
-        public FSM_DownloadHistoricalData fsm_hd = new FSM_DownloadHistoricalData();
 
         public MainWindow()
         {
@@ -37,8 +37,6 @@ namespace IBSampleApp
             sysClock.Interval = TimeSpan.FromSeconds(1);
             sysClock.Tick += SysClock_Tick;
             sysClock.Start();
-
-            //fsm_hd.Initialize();
         }
 
         // 1 second tick timer for updating clock

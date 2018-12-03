@@ -1,63 +1,74 @@
 ﻿using System;
+using System.Globalization;
 
 namespace IBSampleApp
 {
-    // Strongly recommended to use interface to define state methods so proper signature can be enforced.
-    public interface IFSM_DownloadHistoricalData
+    // FSM Event packet.
+    // Payload data can be anything
+    public class FSM_EventArgs
     {
-        void RequestContractDetails();
-        void GetHeadTimeStamp();
-        void RequestHistoricalData();
-        void StoreData();
-        void SelectNextDownloadDate();
+        // Contract used by the event
+        public GooContract Contract { get; set; }
+        // Object payload. Can be anything. The event will convert
+        public object Payload { get; set; }
+
+        public FSM_EventArgs(GooContract c, object p=null)
+        {
+            Contract = c;
+            Payload = p;
+        }
     }
 
     // FSM - DownloadHistoricalData
     // Downloads historical price data from broker platform
-    public class FSM_DownloadHistoricalData : FiniteStateMachine, IFSM_DownloadHistoricalData
+    // See FSM_DownloadHistoricalData in draw.io editor
+    public class FSM_DownloadHistoricalData : FiniteStateMachine
     {
+        public FSM_DownloadHistoricalData(GooContract c) : base(c) { }
+        
         // These define the state and event names and the transitions
         #region FSM Definition
         // All valid states
         public enum States
         {
             Initialize,
-            RequestContractDetails,
             GetHeadTimeStamp,
-            RequestHistoricalData,
-            StoreData,
-            SelectNextDownloadDate,
+            TimeStampReceived,
+            DownloadHistoricalData,
+            DataReceived,
+            DataRequestDone,
             Terminate
         }
 
         // All valid transition events.
         public enum Events
         {
-            RequestContractDetails,
-            GotContractDetails,
-            GotHeadTimeStamp,
-            GotHistoricalDataPacket,
-            HistoricalRequestDone,
-            AllDataReceived
+            Initialized,
+            HeadTimeStamp,
+            StartDownload,
+            HistoricalData,
+            HistoricalDataEnd,
+            DownloadNextDay,
+            Finished
         }
 
         // Valid state transitions
-        public StateTransition[] Transitions = new StateTransition[]
+        protected StateTransition[] Transitions = new StateTransition[]
         {
-            new StateTransition(States.Initialize, Events.RequestContractDetails, States.RequestContractDetails),
-            new StateTransition(States.RequestContractDetails, Events.GotContractDetails, States.GetHeadTimeStamp),
-            new StateTransition(States.GetHeadTimeStamp, Events.GotHeadTimeStamp, States.RequestHistoricalData),
-            new StateTransition(States.RequestHistoricalData, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.StoreData, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.StoreData, Events.HistoricalRequestDone, States.SelectNextDownloadDate),
-            new StateTransition(States.SelectNextDownloadDate, Events.GotHistoricalDataPacket, States.StoreData),
-            new StateTransition(States.SelectNextDownloadDate, Events.AllDataReceived, States.Terminate)
+            new StateTransition(States.Initialize, Events.Initialized, States.GetHeadTimeStamp),
+            new StateTransition(States.GetHeadTimeStamp, Events.HeadTimeStamp, States.TimeStampReceived),
+            new StateTransition(States.TimeStampReceived, Events.StartDownload, States.DownloadHistoricalData),
+            new StateTransition(States.DownloadHistoricalData, Events.HistoricalData, States.DataReceived),
+            new StateTransition(States.DataReceived, Events.HistoricalData, States.DataReceived),
+            new StateTransition(States.DataReceived, Events.HistoricalDataEnd, States.DataRequestDone),
+            new StateTransition(States.DataRequestDone, Events.DownloadNextDay, States.DownloadHistoricalData),
+            new StateTransition(States.DataRequestDone, Events.Finished, States.Terminate)
         };
         #endregion
 
         // The methods are needed to initialize the FSM.
         #region FSM Initialization
-        public override Type GetStates()
+        protected override Type GetStates()
         {
             return typeof(States);
         }
@@ -67,37 +78,81 @@ namespace IBSampleApp
             return typeof(Events);
         }
 
-        public override StateTransition[] GetTransitions()
+        protected override Type GetHostType()
+        {
+            // This is the host object type of whatever is using the FSM.
+            return typeof(GooContract);
+        }
+
+        protected override StateTransition[] GetTransitions()
         {
             return Transitions;
         }
+
+        protected override Type GetActionSignature()
+        {
+            // All types will use this signature
+            return typeof(Action<FSM_EventArgs>);
+        }
         #endregion
 
-        // Methods for individual states
+        // Methods for individual states. Should be private or protected to hide them since they don't need to be called directly.
+        // NOTE: NAMES NEED TO MATCH STATES EXACTLY OR EXCEPTIONS WILL BE GENERATED!
         #region State Methods
-        public void RequestContractDetails()
+
+        private void GetHeadTimeStamp(FSM_EventArgs e)
         {
-            throw new NotImplementedException();
+            TWS.RequestHeadTimeStamp(e.Contract);
         }
 
-        public void GetHeadTimeStamp()
+        private void TimeStampReceived(FSM_EventArgs e)
         {
-            throw new NotImplementedException();
+            // Convert head time stamp to DateTime for processing convenience later on.
+            var headTimeStampString = e.Payload as string;
+            DateTime dt = DateTime.ParseExact(headTimeStampString, TWSInfo.TimeStampStringFormat, CultureInfo.InvariantCulture);
+            e.Contract.HeadTimeStamp = dt;
+
+            // We'll work backwards to the headtimestamp from current time
+            e.Contract.HistRequestTimeStamp = DateTime.Now;
+
+            // Transition to start historical download. Can reuse the event args as they'll be the same.
+            FireEvent(FSM_DownloadHistoricalData.Events.StartDownload, e);
         }
 
-        public void RequestHistoricalData()
+        private void DownloadHistoricalData(FSM_EventArgs e)
         {
-            throw new NotImplementedException();
+            // Submit a request for 24 hours of 1-min data
+            TWS.RequestHistoricalData(e.Contract, e.Contract.HistRequestTimeStamp, TWSInfo.HistoricalDataStepSizes.Day_1, TWSInfo.BarSizeSetting.Min_1);
         }
 
-        public void StoreData()
-        {
-            throw new NotImplementedException();
+        private void DataReceived(FSM_EventArgs e)
+        {         
+            OHLCQuote dataBar = e.Payload as OHLCQuote;
+
+            if(e.Contract.HistoricalData.Data.ContainsKey(dataBar.Date) == false)
+            {
+                e.Contract.HistoricalData.Data.Add(dataBar.Date, dataBar);
+            }
         }
 
-        public void SelectNextDownloadDate()
+        private void DataRequestDone(FSM_EventArgs e)
         {
-            throw new NotImplementedException();
+            var c = e.Contract;
+
+            // Skip to next day
+            e.Contract.HistRequestTimeStamp = e.Contract.HistRequestTimeStamp.AddDays(-1);
+
+            if(DateTime.Compare(c.HeadTimeStamp, c.HistRequestTimeStamp) < 0)
+            {
+                FireEvent(FSM_DownloadHistoricalData.Events.DownloadNextDay, e);
+
+                string msg = String.Format("{0}: {1}", e.Contract.Symbol, e.Contract.HistRequestTimeStamp.ToString());
+                MessageLogger.LogMessage(msg);
+            }
+            else
+            {
+                FireEvent(FSM_DownloadHistoricalData.Events.Finished);
+            }
         }
         #endregion
     }
