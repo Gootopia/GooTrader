@@ -121,16 +121,23 @@ namespace IBSampleApp
         private static void Ibclient_Error(int id, int errorCode, string errorMsg, Exception exception)
         {
             // Default message just prints error codes
-            var errMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), errorMsg);
+            var logErrorMsg = errorMsg;
 
-            // Exception implies stream issues (TWS went away)
-            if (exception != null)
+            // All message info may only be within the exception
+            if(errorMsg == null)
             {
-                ibclient.ClientSocket.eDisconnect();
-                errMsg = "TWS Disconnected!";
+                logErrorMsg = "";
             }
 
-            MessageLogger.LogMessage(errMsg);
+            // If an exception was generated, it will provide additional information.
+            if(exception != null)
+            {
+                logErrorMsg = String.Format("{0}. EXCEPTION: {1}", logErrorMsg, exception.Message);
+            }
+
+            logErrorMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), logErrorMsg);
+
+            MessageLogger.LogMessage(logErrorMsg);
         }
 
         // TWS connection closed

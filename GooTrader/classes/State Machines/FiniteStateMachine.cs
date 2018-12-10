@@ -5,26 +5,6 @@ using Appccelerate.StateMachine;
 
 namespace IBSampleApp
 {
-    // Basic interface/methods of any finite state machines
-    public interface IFiniteStateMachine
-    {
-        // Return enum type for all allowed states
-        Type GetStates();
-
-        // Return enum type for all allowed events
-        Type GetEvents();
-
-        // Return all defined state transitions for the FSM
-        StateTransition[] GetTransitions();
-
-        // Fire an event for the state machine
-        void FireEvent(System.Enum newEvent);
-
-        // Required entry and exit state methods.
-        void Initialize();
-        void Terminate();
-    }
-
     // Finite state machine class
     public class FiniteStateMachine
     {

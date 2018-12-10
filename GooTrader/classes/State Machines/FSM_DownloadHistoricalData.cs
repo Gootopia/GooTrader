@@ -3,22 +3,6 @@ using System.Globalization;
 
 namespace IBSampleApp
 {
-    // FSM Event packet.
-    // Payload data can be anything
-    public class FSM_EventArgs
-    {
-        // Contract used by the event
-        public GooContract Contract { get; set; }
-        // Object payload. Can be anything. The event will convert
-        public object Payload { get; set; }
-
-        public FSM_EventArgs(GooContract c, object p=null)
-        {
-            Contract = c;
-            Payload = p;
-        }
-    }
-
     // FSM - DownloadHistoricalData
     // Downloads historical price data from broker platform
     // See FSM_DownloadHistoricalData in draw.io editor
@@ -99,7 +83,6 @@ namespace IBSampleApp
         // Methods for individual states. Should be private or protected to hide them since they don't need to be called directly.
         // NOTE: NAMES NEED TO MATCH STATES EXACTLY OR EXCEPTIONS WILL BE GENERATED!
         #region State Methods
-
         private void GetHeadTimeStamp(FSM_EventArgs e)
         {
             TWS.RequestHeadTimeStamp(e.Contract);

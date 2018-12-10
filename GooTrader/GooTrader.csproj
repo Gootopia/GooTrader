@@ -141,6 +141,7 @@
     <Compile Include="classes\PropertyUpdater.cs" />
     <Compile Include="classes\State Machines\FiniteStateMachine.cs" />
     <Compile Include="classes\State Machines\FSM_DownloadHistoricalData.cs" />
+    <Compile Include="classes\State Machines\FSM_EventArgs.cs" />
     <Compile Include="classes\Tws\Tws.cs" />
     <Compile Include="classes\Tws\TwsInfo.cs" />
     <Compile Include="classes\Tws\Tws_EventHandlers.cs" />
