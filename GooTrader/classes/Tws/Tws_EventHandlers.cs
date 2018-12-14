@@ -6,7 +6,8 @@ namespace IBSampleApp
     // TWS event handlers
     public partial class TWS
     {
-        #region TWS Event Handlers
+        // Historical data processing
+        #region Historical Data Event Handling
         // Received an updated historical data packet
         private static void Ibclient_HistoricalDataUpdate(messages.HistoricalDataMessage obj)
         {
@@ -45,7 +46,10 @@ namespace IBSampleApp
             FSM_EventArgs e = new FSM_EventArgs(c, headTimeStamp.HeadTimestamp);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, e);
         }
+        #endregion Historical Data Event Handling
 
+        // Real-time data
+        #region Live Data
         // TWS message response to real-time data: Bid/Ask update
         private static void Ibclient_tickByTickBidAsk(messages.TickByTickBidAskMessage bidask)
         {
@@ -62,21 +66,10 @@ namespace IBSampleApp
             GooContract c = GetDataRequestContract(last.ReqId, false);
             c.Last = last.Price;
         }
+        #endregion Live Data
 
-        // TWS response with request for server time. Used to get local offset
-        private static void Ibclient_CurrentTime(long time)
-        {
-            var twsTime = new DateTime(1970, 1, 1);
-            twsTime = twsTime.AddSeconds(time).ToLocalTime();
-            var localTime = DateTime.Now;
-
-            ServerTimeOffset = twsTime - localTime;
-
-            var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms",
-                twsTime.ToLongTimeString(), localTime.ToLongTimeString(), TWS.ServerTimeOffset.TotalMilliseconds.ToString());
-            MessageLogger.LogMessage(msg);
-        }
-
+        // All stuff on information about contracts and instrument definitions
+        #region Contract Details
         // Event to inform outside world a new contract is created (after receiving ContractDetails from TWS)
         public static event Action<string, GooContract> OnNewContract;
 
@@ -96,7 +89,7 @@ namespace IBSampleApp
 
             string contractKey = GetContractKey(c.TWSActiveContractDetails.Contract);
             
-            // Notify outside world that a new contract has been created.
+            // Notify outside world that a new contract has been created and pass along the contractkey and GooContract.
             OnNewContract?.Invoke(contractKey, c);
 
             MessageLogger.LogMessage(String.Format("ContractDetails request {0} completed", reqId.ToString()));
@@ -116,10 +109,14 @@ namespace IBSampleApp
 
             MessageLogger.LogMessage(String.Format("ContractDetails request {0}: {1}", msg_cd.RequestId.ToString(), contractKey));
         }
+        #endregion Contract Details
 
+        #region Error Handling
         // Error message handler. Handles both standard error codes as well as exceptions
         private static void Ibclient_Error(int id, int errorCode, string errorMsg, Exception exception)
         {
+            // Bookeeping behind the scenes so we can debug later on
+            #region TWS Error Logging
             // Default message just prints error codes
             var logErrorMsg = errorMsg;
 
@@ -138,6 +135,53 @@ namespace IBSampleApp
             logErrorMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), logErrorMsg);
 
             MessageLogger.LogMessage(logErrorMsg);
+            #endregion TWS Error Logging
+
+            switch(errorCode)
+            {
+                #region 0=Connection Error
+                case 0:
+                    TWS.FSM.Connection.FireEvent(FSM_TwsConnectivity.Events.TWS_Error_0);
+                    break;
+                #endregion 0=Connection Error
+
+                default:
+                    break;
+
+            }
+        }
+        #endregion Error Handling
+
+        // Order Status, execution, etc.
+        #region Order Handling
+        #endregion Order Handling
+
+        #region Miscellaneous
+        // TWS response with request for server time. Used to get local offset
+        private static void Ibclient_CurrentTime(long time)
+        {
+            var twsTime = new DateTime(1970, 1, 1);
+            twsTime = twsTime.AddSeconds(time).ToLocalTime();
+            var localTime = DateTime.Now;
+
+            ServerTimeOffset = twsTime - localTime;
+
+            var msg = String.Format("Current TWS Server Time: {0}. Local: {1}, Difference {2}ms",
+                twsTime.ToLongTimeString(), localTime.ToLongTimeString(), TWS.ServerTimeOffset.TotalMilliseconds.ToString());
+            MessageLogger.LogMessage(msg);
+        }
+
+        // Listener for anyone who wants to know when the connection status changes (like the UI).
+        public static event Action<bool> OnConnectionStatusChanged;
+        private static void Ibclient_NextValidId(messages.ConnectionStatusMessage obj)
+        {
+            ibclient.NextOrderId = 0;
+
+            // If anyone is listening, notify them outside world that TWS is now connected (i.e, the UI)
+            OnConnectionStatusChanged?.Invoke(ibclient.ClientSocket.IsConnected());
+
+            // Per the TWS API documentation (see Connectivity section), receiving this event means TWS has completed the connection
+            Connected();
         }
 
         // TWS connection closed
@@ -145,17 +189,6 @@ namespace IBSampleApp
         {
             throw new NotImplementedException();
         }
-
-        public static event Action<bool> OnConnectionStatusChanged;
-        private static void Ibclient_NextValidId(messages.ConnectionStatusMessage obj)
-        {
-            ibclient.NextOrderId = 0;
-
-            // Notify outside world that TWS is now connected
-            OnConnectionStatusChanged?.Invoke(ibclient.ClientSocket.IsConnected());
-
-            Connected();
-        }
-        #endregion
+        #endregion Miscellaneous
     }
 }

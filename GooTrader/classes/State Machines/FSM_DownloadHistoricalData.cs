@@ -62,7 +62,7 @@ namespace IBSampleApp
             return typeof(Events);
         }
 
-        protected override Type GetHostType()
+        protected override Type GetStateObjectType()
         {
             // This is the host object type of whatever is using the FSM.
             return typeof(GooContract);
@@ -73,7 +73,7 @@ namespace IBSampleApp
             return Transitions;
         }
 
-        protected override Type GetActionSignature()
+        protected override Type GetStateMethodSignature()
         {
             // All types will use this signature
             return typeof(Action<FSM_EventArgs>);

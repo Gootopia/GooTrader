@@ -10,7 +10,7 @@ namespace IBSampleApp
     {
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-            TWS.Connect();
+            TWS.FSM.Connection.FireEvent(FSM_TwsConnectivity.Events.Connect);
         }
 
         GooContract sp500, nq100;

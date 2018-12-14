@@ -24,6 +24,7 @@ namespace IBSampleApp
 
         public MainWindow()
         {
+            #region System Initialization
             InitializeComponent();
 
             // Top level data context is the viewmodel. 
@@ -37,6 +38,10 @@ namespace IBSampleApp
             sysClock.Interval = TimeSpan.FromSeconds(1);
             sysClock.Tick += SysClock_Tick;
             sysClock.Start();
+            #endregion System Initialization
+
+            // Start the TWS connectivity state machine.
+            TWS.FSM.Connection.Start();
         }
 
         // 1 second tick timer for updating clock

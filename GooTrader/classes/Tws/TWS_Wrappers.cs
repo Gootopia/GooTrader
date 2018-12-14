@@ -1,10 +1,50 @@
 ﻿using System;
+using IBApi;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace IBSampleApp
 {
     // These are TWS wrapper functions for calling various client requests. Can be used by FSM as needed.
     public partial class TWS
     {
+        /// <summary>
+        /// Open local connection to TWS
+        /// </summary>
+        public static void Connect()
+        {
+            // Connection method per the TWS example application
+            try
+            {
+                // Open a connection to TWS
+                ibclient.ClientId = 0;
+                // Connection on the local machine
+                ibclient.ClientSocket.eConnect("127.0.0.1", 7497, 0);
+
+                // Start an IB reader thread
+                var reader = new EReader(ibclient.ClientSocket, signal);
+                reader.Start();
+
+                // background thread to process TWS messages and pass them back to the reader.
+                new Thread(() => { while (ibclient.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
+            }
+            catch (Exception)
+            {
+                // TODO: Not quite sure when we get here. May need to add hierarchy FSM as these could possibly occur in any state.
+                throw new NotImplementedException();
+            }
+        }
+
+        // Operations to perform once TWS connection is acquired.
+        // Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
+        public static void Connected()
+        {
+            MessageLogger.LogMessage("Requesting TWS Time");
+            
+            // Always sync server time after connection. We'll do this behind the scenes unlike most TWS events as it just clutters the state machine
+            ibclient.ClientSocket.reqCurrentTime();
+        }
+
         /// <summary>
         /// Wrapper to request tick market data (Level I bid/ask/last)
         /// </summary>

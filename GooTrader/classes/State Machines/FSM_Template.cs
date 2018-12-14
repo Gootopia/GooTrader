@@ -4,12 +4,15 @@ using System.Globalization;
 namespace IBSampleApp
 {
     /// <summary>
-    /// $fsmname$
+    /// $itemname$
     /// Summary of the state machine goes here.
     /// </summary>
     public class $itemname$ : FiniteStateMachine
     {
-        public $itemname$(GooContract c) : base(c) { }
+        /// <summary>
+        /// See FiniteStateMachine for constructor details.
+        /// </summary>
+        public $itemname$() : base(Nullable, true, false) { }
         
         // These define the state and event names and the transitions
         #region FSM Definition
@@ -60,16 +63,17 @@ namespace IBSampleApp
         #endregion NO_MODIFY
 
         #region MODIFY
-        protected override Type GetHostType()
+        protected override Type GetStateObjectType()
         {
             // This is the host object type of whatever is using the FSM.
             throw new NotImplementedException();
         }
 
-        protected override Type GetActionSignature()
+        protected override Type GetStateMethodSignature()
         {
             // All types will use this signature
-            return typeof(Action<FSM_EventArgs>);
+            //return typeof(Action<FSM_EventArgs>);
+            return base.GetStateMethodSignature(); 
         }
         #endregion MODIFY
         #endregion
