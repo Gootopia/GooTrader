@@ -35,14 +35,27 @@ namespace IBSampleApp
             }
         }
 
-        // Operations to perform once TWS connection is acquired.
-        // Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
+        /// <summary>
+        /// Break connection to TWS. Can be called for both intentional and unintentional disconnections.
+        /// </summary>
+        public static void Disconnect()
+        {
+            ibclient.ClientSocket.Close();
+            bool status = ConnectionStatusChanged();
+
+            MessageLogger.LogMessage("Disconnected");
+        }
+
+        /// <summary>
+        /// Connection made to TWS.
+        /// </summary>
         public static void Connected()
         {
-            MessageLogger.LogMessage("Requesting TWS Time");
+            bool status = ConnectionStatusChanged();
             
             // Always sync server time after connection. We'll do this behind the scenes unlike most TWS events as it just clutters the state machine
             ibclient.ClientSocket.reqCurrentTime();
+            MessageLogger.LogMessage("Requesting TWS Time");
         }
 
         /// <summary>

@@ -76,19 +76,19 @@ namespace IBSampleApp
         protected override Type GetStateMethodSignature()
         {
             // All types will use this signature
-            return typeof(Action<FSM_EventArgs>);
+            return typeof(Action<FSM_EventArgs.GooContract_With_Payload>);
         }
         #endregion
 
         // Methods for individual states. Should be private or protected to hide them since they don't need to be called directly.
         // NOTE: NAMES NEED TO MATCH STATES EXACTLY OR EXCEPTIONS WILL BE GENERATED!
         #region State Methods
-        private void GetHeadTimeStamp(FSM_EventArgs e)
+        private void GetHeadTimeStamp(FSM_EventArgs.GooContract_With_Payload e)
         {
             TWS.RequestHeadTimeStamp(e.Contract);
         }
 
-        private void TimeStampReceived(FSM_EventArgs e)
+        private void TimeStampReceived(FSM_EventArgs.GooContract_With_Payload e)
         {
             // Convert head time stamp to DateTime for processing convenience later on.
             var headTimeStampString = e.Payload as string;
@@ -102,13 +102,13 @@ namespace IBSampleApp
             FireEvent(FSM_DownloadHistoricalData.Events.StartDownload, e);
         }
 
-        private void DownloadHistoricalData(FSM_EventArgs e)
+        private void DownloadHistoricalData(FSM_EventArgs.GooContract_With_Payload e)
         {
             // Submit a request for 24 hours of 1-min data
             TWS.RequestHistoricalData(e.Contract, e.Contract.HistRequestTimeStamp, TWSInfo.HistoricalDataStepSizes.Day_1, TWSInfo.BarSizeSetting.Min_1);
         }
 
-        private void DataReceived(FSM_EventArgs e)
+        private void DataReceived(FSM_EventArgs.GooContract_With_Payload e)
         {         
             OHLCQuote dataBar = e.Payload as OHLCQuote;
 
@@ -118,7 +118,7 @@ namespace IBSampleApp
             }
         }
 
-        private void DataRequestDone(FSM_EventArgs e)
+        private void DataRequestDone(FSM_EventArgs.GooContract_With_Payload e)
         {
             var c = e.Contract;
 

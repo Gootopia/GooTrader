@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 using Appccelerate.StateMachine;
 
 namespace IBSampleApp
@@ -66,7 +64,7 @@ namespace IBSampleApp
         // Return an action method signature used by all state methods.
         protected virtual Type GetStateMethodSignature()
         {
-            // Default Action has no parameters.
+            // Default Action has no parameters. Override in your FSM to allow parameters to be passed to states via FireEvent
             return typeof(Action);
         }
 
@@ -177,7 +175,34 @@ namespace IBSampleApp
             {
                 Start();
             }
+
+            // Add some handlers so we can track states/transitions while debugging
+            _fsm.TransitionCompleted += _fsm_TransitionCompleted;
+            _fsm.TransitionDeclined += _fsm_TransitionDeclined;
+            _fsm.TransitionExceptionThrown += _fsm_TransitionExceptionThrown;
         }
+
+        #region Debug Stuff
+        private void _fsm_TransitionExceptionThrown(object sender, Appccelerate.StateMachine.Machine.Events.TransitionExceptionEventArgs<string, string> e)
+        {
+            // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
+            throw new NotImplementedException();
+        }
+
+        private void _fsm_TransitionDeclined(object sender, Appccelerate.StateMachine.Machine.Events.TransitionEventArgs<string, string> e)
+        {
+            // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
+            throw new NotImplementedException();
+        }
+
+        private Appccelerate.StateMachine.Machine.Events.TransitionCompletedEventArgs<string, string> _debugLastTransition;
+        private void _fsm_TransitionCompleted(object sender, Appccelerate.StateMachine.Machine.Events.TransitionCompletedEventArgs<string, string> e)
+        {
+            // make a copy of the latest transition so we can debug.
+            // TODO: Transition logger
+            _debugLastTransition = e;
+        }
+        #endregion
 
         // contains some reflection code we may want to use later. Ignore it for now
         private void Initialize2()

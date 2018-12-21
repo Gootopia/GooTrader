@@ -24,7 +24,6 @@ namespace IBSampleApp
             ReadyToConnect,
             TryConnection,
             Connected,
-            BrokenSocket,
             FailedConnection,
             Terminate
         }
@@ -51,8 +50,8 @@ namespace IBSampleApp
             new StateTransition(States.TryConnection, Events.TWS_Error_0, States.FailedConnection),
             new StateTransition(States.TryConnection, Events.TWS_nextValidId, States.Connected),
             new StateTransition(States.FailedConnection, Events.Disconnected, States.NotConnected),
-            new StateTransition(States.Connected, Events.TWS_Error_507, States.BrokenSocket),
-            new StateTransition(States.BrokenSocket, Events.Disconnected, States.NotConnected)
+            new StateTransition(States.Connected, Events.TWS_Error_507, States.FailedConnection),
+            new StateTransition(States.Connected, Events.TWS_Error_0, States.FailedConnection)
         };
         #endregion
 
@@ -86,7 +85,8 @@ namespace IBSampleApp
         protected override Type GetStateMethodSignature()
         {
             // All types will use this signature, which defaults to no parameters and no return.
-            return base.GetStateMethodSignature();
+            //return base.GetStateMethodSignature();
+            return typeof(Action<FSM_EventArgs.Payload_Only>);
         }
         #endregion MODIFY
         #endregion
@@ -96,34 +96,31 @@ namespace IBSampleApp
         #region State Methods
 
         // Disconnected from TWS.
-        public void NotConnected()
+        public void NotConnected(FSM_EventArgs.Payload_Only e)
         {
             // TODO: Detect if TWS application is running. For now we will assume it is.
             FireEvent(Events.TwsRunning);
         }
 
         // TWS is verified to be running so is available for connection
-        private void ReadyToConnect()
+        private void ReadyToConnect(FSM_EventArgs.Payload_Only e)
         {
         }
 
-        private void TryConnection()
+        private void TryConnection(FSM_EventArgs.Payload_Only e)
         {
             TWS.Connect();
         }
 
-        private void Connected()
+        private void Connected(FSM_EventArgs.Payload_Only e)
         {
             TWS.Connected();
         }
 
-        private void BrokenSocket()
+        private void FailedConnection(FSM_EventArgs.Payload_Only e)
         {
-        }
-
-        private void FailedConnection()
-        {
-
+            TWS.Disconnect();
+            FireEvent(Events.Disconnected);
         }
 
         #endregion

@@ -55,10 +55,21 @@ namespace IBSampleApp
         #endregion
 
         #region Private Methods
-        // Connection with TWS client has been closed
-        private static void ConnectionClosed()
+        // event used by external listeners (i.e: UI) to subscribe connection change notices.
+        public static event Action<bool> OnConnectionStatusChanged;
+
+        /// <summary>
+        /// Change in the status of TWS connection state
+        /// </summary>
+        /// <returns>true = connected to TWS</returns>
+        private static bool ConnectionStatusChanged()
         {
-            MessageLogger.LogMessage("Connection Lost!");
+            bool status = ibclient.ClientSocket.IsConnected();
+
+            // Inform any listeners of the new status
+            OnConnectionStatusChanged?.Invoke(status);
+
+            return status;
         }
 
         /// <summary>
@@ -217,7 +228,7 @@ namespace IBSampleApp
         public static void GetHistoricalData(GooContract c)
         {
             // Historical data is retrieved using a state machine
-            FSM_EventArgs e = new FSM_EventArgs(c);
+            var e = new FSM_EventArgs.GooContract_With_Payload(c);
             c.FSM.DownloadHistoricalData.Start(e);
         }
         #endregion

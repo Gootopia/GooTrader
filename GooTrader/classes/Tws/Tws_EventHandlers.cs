@@ -20,7 +20,7 @@ namespace IBSampleApp
             // Data request is now completed = delete
             GooContract c = GetDataRequestContract(hDataEnd.RequestId, true);
 
-            FSM_EventArgs e = new FSM_EventArgs(c);
+            var e = new FSM_EventArgs.GooContract_With_Payload(c);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HistoricalDataEnd, e);
         }
 
@@ -32,7 +32,7 @@ namespace IBSampleApp
 
             // Package the quote and send the data received event to the state machine.
             OHLCQuote quote = new OHLCQuote(hData.Date, hData.Open, hData.High, hData.Low, hData.Close);
-            FSM_EventArgs e = new FSM_EventArgs(c, quote);
+            var e = new FSM_EventArgs.GooContract_With_Payload(c, quote);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HistoricalData, e);
         }
 
@@ -43,7 +43,7 @@ namespace IBSampleApp
             GooContract c = GetDataRequestContract(headTimeStamp.ReqId, true);
             
             // Send event to the download FSM to tell it the head time stamp has been received from TWS.
-            FSM_EventArgs e = new FSM_EventArgs(c, headTimeStamp.HeadTimestamp);
+            var e = new FSM_EventArgs.GooContract_With_Payload(c, headTimeStamp.HeadTimestamp);
             c.FSM.DownloadHistoricalData.FireEvent(FSM_DownloadHistoricalData.Events.HeadTimeStamp, e);
         }
         #endregion Historical Data Event Handling
@@ -171,14 +171,10 @@ namespace IBSampleApp
             MessageLogger.LogMessage(msg);
         }
 
-        // Listener for anyone who wants to know when the connection status changes (like the UI).
-        public static event Action<bool> OnConnectionStatusChanged;
+        // TWS response following successful connection of client to server
         private static void Ibclient_NextValidId(messages.ConnectionStatusMessage obj)
         {
             ibclient.NextOrderId = 0;
-
-            // If anyone is listening, notify them outside world that TWS is now connected (i.e, the UI)
-            OnConnectionStatusChanged?.Invoke(ibclient.ClientSocket.IsConnected());
 
             // Per the TWS API documentation (see Connectivity section), receiving this event means TWS has completed the connection
             Connected();
