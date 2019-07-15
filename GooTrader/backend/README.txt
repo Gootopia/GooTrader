@@ -1,0 +1,4 @@
+- Install TWS API
+- IBClient.cs should be copied from 'TWS API->samples->CSharp->IBSampleApp' to the GooTrader backend folder
+- All messages should be copied from the samples backend messages folder
+- Check the API version to make sure they match as IB frequently changes stuff

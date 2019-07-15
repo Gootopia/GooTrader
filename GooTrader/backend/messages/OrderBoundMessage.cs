@@ -9,17 +9,17 @@ using IBApi;
 
 namespace IBSampleApp.messages
 {
-    class TickByTickMidPointMessage
+    class OrderBoundMessage
     {
-        public int ReqId { get; private set; }
-        public long Time { get; private set; }
-        public double MidPoint { get; private set; }
+        public long OrderId { get; private set; }
+        public int ApiClientId { get; private set; }
+        public int ApiOrderId { get; private set; }
 
-        public TickByTickMidPointMessage(int reqId, long time, double midPoint)
+        public OrderBoundMessage(long orderId, int apiClientId, int apiOrderId)
         {
-            ReqId = reqId;
-            Time = time;
-            MidPoint = midPoint;
+            OrderId = orderId;
+            ApiClientId = apiClientId;
+            ApiOrderId = apiOrderId;
         }
     }
 }

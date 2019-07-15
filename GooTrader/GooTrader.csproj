@@ -8,11 +8,12 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>GooTrader</RootNamespace>
     <AssemblyName>GooTrader</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,6 +37,9 @@
   <ItemGroup>
     <Reference Include="Appccelerate.StateMachine, Version=4.4.0.0, Culture=neutral, PublicKeyToken=917bca444d1f2b4c, processorArchitecture=MSIL">
       <HintPath>..\packages\Appccelerate.StateMachine.4.4.0\lib\netstandard1.0\Appccelerate.StateMachine.dll</HintPath>
+    </Reference>
+    <Reference Include="CSharpAPI">
+      <HintPath>..\..\..\..\..\..\TWS API\samples\CSharp\IBSampleApp\bin\Release\CSharpAPI.dll</HintPath>
     </Reference>
     <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
@@ -81,6 +85,7 @@
     <Compile Include="backend\messages\AdvisorDataMessage.cs" />
     <Compile Include="backend\messages\BondContractDetailsMessage.cs" />
     <Compile Include="backend\messages\CommissionMessage.cs" />
+    <Compile Include="backend\messages\CompletedOrderMessage.cs" />
     <Compile Include="backend\messages\ConnectionStatusMessage.cs" />
     <Compile Include="backend\messages\ContractDetailsEndMessage.cs" />
     <Compile Include="backend\messages\ContractDetailsMessage.cs" />
@@ -97,8 +102,8 @@
     <Compile Include="backend\messages\HistoricalDataMessage.cs" />
     <Compile Include="backend\messages\HistoricalNewsEndMessage.cs" />
     <Compile Include="backend\messages\HistoricalNewsMessage.cs" />
-    <Compile Include="backend\messages\HistoricalTickBidAsk.cs" />
     <Compile Include="backend\messages\HistoricalTickBidAskEndMessage.cs" />
+    <Compile Include="backend\messages\HistoricalTickBidAskMessage.cs" />
     <Compile Include="backend\messages\HistoricalTickEndMessage.cs" />
     <Compile Include="backend\messages\HistoricalTickLastEndMessage.cs" />
     <Compile Include="backend\messages\HistoricalTickLastMessage.cs" />
@@ -111,6 +116,7 @@
     <Compile Include="backend\messages\NewsArticleMessage.cs" />
     <Compile Include="backend\messages\NewsProvidersMessage.cs" />
     <Compile Include="backend\messages\OpenOrderMessage.cs" />
+    <Compile Include="backend\messages\OrderBoundMessage.cs" />
     <Compile Include="backend\messages\OrderMessage.cs" />
     <Compile Include="backend\messages\OrderStatusMessage.cs" />
     <Compile Include="backend\messages\PositionMessage.cs" />
@@ -130,6 +136,7 @@
     <Compile Include="backend\messages\TickNewsMessage.cs" />
     <Compile Include="backend\messages\TickOptionMessage.cs" />
     <Compile Include="backend\messages\TickPriceMessage.cs" />
+    <Compile Include="backend\messages\TickReqParamsMessage.cs" />
     <Compile Include="backend\messages\TickSizeMessage.cs" />
     <Compile Include="backend\messages\UpdateAccountTimeMessage.cs" />
     <Compile Include="backend\messages\UpdatePortfolioMessage.cs" />
@@ -181,12 +188,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\TWS API\source\csharpclient\client\CSharpAPI.csproj">
-      <Project>{8ede0744-96c2-40b0-a8dc-37df79370203}</Project>
-      <Name>CSharpAPI</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
