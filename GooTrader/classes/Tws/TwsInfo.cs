@@ -91,6 +91,33 @@
 
         // Note that TWS timestamp strings have TWO spaces between day and hour!
         public static string TimeStampStringFormat = "yyyyMMdd  HH:mm:ss";
+
+        /// <summary>
+        /// TWS Message codes. Rrefer to TWS documentation: "Error Handling" for additional details
+        /// NOTE: If the code is not found below, it is not yet implemented in the client!!!!
+        /// </summary>
+        public static class MessageCodes
+        {
+            public static class System
+            {
+                public static string Code_1100 = "Connectivity between IB and the TWS has been lost.";
+            }
+
+            public static class Warning
+            {
+            }
+
+            public static class Error_Client
+            {
+                public static string Code_501 = "Already Connected.";
+            }
+
+            public static class Error_TWS
+            {
+
+            }
+
+        }
     }
     #endregion
 }

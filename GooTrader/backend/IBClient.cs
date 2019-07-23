@@ -1,4 +1,4 @@
-/* Copyright (C) 2018 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
+/* Copyright (C) 2019 Interactive Brokers LLC. All rights reserved. This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 using System;
 using System.Collections.Generic;
@@ -465,17 +465,17 @@ namespace IBSampleApp
             var tmp = UpdateMktDepth;
 
             if (tmp != null)
-                sc.Post((t) => tmp(new DeepBookMessage(tickerId, position, operation, side, price, size, "")), null);
+                sc.Post((t) => tmp(new DeepBookMessage(tickerId, position, operation, side, price, size, "", false)), null);
         }
 
         public event Action<DeepBookMessage> UpdateMktDepthL2;
 
-        void EWrapper.updateMktDepthL2(int tickerId, int position, string marketMaker, int operation, int side, double price, int size)
+        void EWrapper.updateMktDepthL2(int tickerId, int position, string marketMaker, int operation, int side, double price, int size, bool isSmartDepth)
         {
             var tmp = UpdateMktDepthL2;
 
             if (tmp != null)
-                sc.Post((t) => tmp(new DeepBookMessage(tickerId, position, operation, side, price, size, marketMaker)), null);
+                sc.Post((t) => tmp(new DeepBookMessage(tickerId, position, operation, side, price, size, marketMaker, isSmartDepth)), null);
         }
 
         public event Action<int, int, String, String> UpdateNewsBulletin;
@@ -755,15 +755,15 @@ namespace IBSampleApp
                 sc.Post((t) => tmp(reqId, theMap), null);
         }
 
-        //public event Action<TickReqParamsMessage> TickReqParams;
+        public event Action<TickReqParamsMessage> TickReqParams;
 
-        //void EWrapper.tickReqParams(int tickerId, double minTick, string bboExchange, int snapshotPermissions)
-        //{
-        //    var tmp = TickReqParams;
+        void EWrapper.tickReqParams(int tickerId, double minTick, string bboExchange, int snapshotPermissions)
+        {
+            var tmp = TickReqParams;
 
-        //    if (tmp != null)
-        //        sc.Post((t) => tmp(new TickReqParamsMessage(tickerId, minTick, bboExchange, snapshotPermissions)), null);
-        //}
+            if (tmp != null)
+                sc.Post((t) => tmp(new TickReqParamsMessage(tickerId, minTick, bboExchange, snapshotPermissions)), null);
+        }
 
         public event Action<NewsProvider[]> NewsProviders;
 
@@ -903,7 +903,7 @@ namespace IBSampleApp
 
             if (tmp != null)
                 ticks.ToList().ForEach(tick => sc.Post((t) =>
-                    tmp(new HistoricalTickBidAskMessage(reqId, tick.Time, tick.Mask, tick.PriceBid, tick.PriceAsk, tick.SizeBid, tick.SizeAsk)), null));
+                    tmp(new HistoricalTickBidAskMessage(reqId, tick.Time, tick.TickAttribBidAsk, tick.PriceBid, tick.PriceAsk, tick.SizeBid, tick.SizeAsk)), null));
         }
 
         public event Action<HistoricalTickLastMessage> historicalTickLast;
@@ -914,27 +914,27 @@ namespace IBSampleApp
 
             if (tmp != null)
                 ticks.ToList().ForEach(tick => sc.Post((t) => 
-                    tmp(new HistoricalTickLastMessage(reqId, tick.Time, tick.Mask, tick.Price, tick.Size, tick.Exchange, tick.SpecialConditions)), null));
+                    tmp(new HistoricalTickLastMessage(reqId, tick.Time, tick.TickAttribLast, tick.Price, tick.Size, tick.Exchange, tick.SpecialConditions)), null));
         }
 
         public event Action<TickByTickAllLastMessage> tickByTickAllLast;
 
-        void EWrapper.tickByTickAllLast(int reqId, int tickType, long time, double price, int size, TickAttrib attribs, string exchange, string specialConditions)
+        void EWrapper.tickByTickAllLast(int reqId, int tickType, long time, double price, int size, TickAttribLast tickAttribLast, string exchange, string specialConditions)
         {
             var tmp = tickByTickAllLast;
 
             if (tmp != null)
-                sc.Post((t) => tmp(new TickByTickAllLastMessage(reqId, tickType, time, price, size, attribs, exchange, specialConditions)), null);
+                sc.Post((t) => tmp(new TickByTickAllLastMessage(reqId, tickType, time, price, size, tickAttribLast, exchange, specialConditions)), null);
         }
 
         public event Action<TickByTickBidAskMessage> tickByTickBidAsk;
 
-        void EWrapper.tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, int bidSize, int askSize, TickAttrib attribs)
+        void EWrapper.tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, int bidSize, int askSize, TickAttribBidAsk tickAttribBidAsk)
         {
             var tmp = tickByTickBidAsk;
 
             if (tmp != null)
-                sc.Post((t) => tmp(new TickByTickBidAskMessage(reqId, time, bidPrice, askPrice, bidSize, askSize, attribs)), null);
+                sc.Post((t) => tmp(new TickByTickBidAskMessage(reqId, time, bidPrice, askPrice, bidSize, askSize, tickAttribBidAsk)), null);
         }
 
         public event Action<TickByTickMidPointMessage> tickByTickMidPoint;
@@ -947,10 +947,34 @@ namespace IBSampleApp
                 sc.Post((t) => tmp(new TickByTickMidPointMessage(reqId, time, midPoint)), null);
         }
 
-        // Actual implementation is in commented out code. Scroll back up to find it.
-        public void tickReqParams(int tickerId, double minTick, string bboExchange, int snapshotPermissions)
+        public event Action<OrderBoundMessage> OrderBound;
+
+        void EWrapper.orderBound(long orderId, int apiClientId, int apiOrderId)
         {
-            throw new NotImplementedException();
+            var tmp = OrderBound;
+
+            if (tmp != null)
+                sc.Post((t) => tmp(new OrderBoundMessage(orderId, apiClientId, apiOrderId)), null);
+        }
+
+        public event Action<CompletedOrderMessage> CompletedOrder;
+
+        void EWrapper.completedOrder(Contract contract, Order order, OrderState orderState)
+        {
+            var tmp = CompletedOrder;
+
+            if (tmp != null)
+                sc.Post((t) => tmp(new CompletedOrderMessage(contract, order, orderState)), null);
+        }
+
+        public event Action CompletedOrdersEnd;
+
+        void EWrapper.completedOrdersEnd()
+        {
+            var tmp = CompletedOrdersEnd;
+
+            if (tmp != null)
+                sc.Post((t) => tmp(), null);
         }
     }
 }

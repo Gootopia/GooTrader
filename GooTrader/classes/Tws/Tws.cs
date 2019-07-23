@@ -27,15 +27,21 @@ namespace IBSampleApp
         // Used to maintain an internal catalog of all available contracts.
         private static Dictionary<string, GooContract> contracts = new Dictionary<string, GooContract>();
 
+        // TWS State Machines for various tasks
+        public static class FSM
+        {
+            public static FSM_TwsConnectivity Connection = new FSM_TwsConnectivity();
+        }
+
         #region Constructor
         static TWS()
         {
             ibclient = new IBClient(signal);
 
+            // Attach the various event handlers
             ibclient.NextValidId += Ibclient_NextValidId;
             ibclient.ConnectionClosed += Ibclient_ConnectionClosed;
             ibclient.Error += Ibclient_Error;
-
             ibclient.ContractDetails += Ibclient_ContractDetails;
             ibclient.ContractDetailsEnd += Ibclient_ContractDetailsEnd;
             ibclient.CurrentTime += Ibclient_CurrentTime;
@@ -49,18 +55,21 @@ namespace IBSampleApp
         #endregion
 
         #region Private Methods
-        // Operations to perform once TWS connection is acquired.
-        // Typically this is assumed to occur once a "nextValidID" event is triggered from TWS
-        private static void Connected()
-        {
-            MessageLogger.LogMessage("Requesting TWS Time");
-            ibclient.ClientSocket.reqCurrentTime();
-        }
+        // event used by external listeners (i.e: UI) to subscribe connection change notices.
+        public static event Action<bool> OnConnectionStatusChanged;
 
-        // Connection with TWS client has been closed
-        private static void ConnectionClosed()
+        /// <summary>
+        /// Change in the status of TWS connection state
+        /// </summary>
+        /// <returns>true = connected to TWS</returns>
+        private static bool ConnectionStatusChanged()
         {
-            MessageLogger.LogMessage("Connection Lost!");
+            bool status = ibclient.ClientSocket.IsConnected();
+
+            // Inform any listeners of the new status
+            OnConnectionStatusChanged?.Invoke(status);
+
+            return status;
         }
 
         /// <summary>
@@ -129,30 +138,6 @@ namespace IBSampleApp
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Open local connection to TWS
-        /// </summary>
-        public static void Connect()
-        {
-            try
-            {
-                // Open a connection to TWS
-                ibclient.ClientId = 0;
-                ibclient.ClientSocket.eConnect("127.0.0.1", 7497, 0);
-
-                // Start an IB reader thread
-                var reader = new EReader(ibclient.ClientSocket, signal);
-                reader.Start();
-
-                // background thread to process TWS messages
-                new Thread(() => { while (ibclient.ClientSocket.IsConnected()) { signal.waitForSignal(); reader.processMsgs(); } }) { IsBackground = true }.Start();
-            }
-            catch (Exception)
-            {
-                throw new Exception();
-            }
-        }
-
         /// <summary>
         /// Convenience function which automatically updates order ID.
         /// For a single client, connection, it is sufficient to simply increment after each use.
@@ -243,7 +228,7 @@ namespace IBSampleApp
         public static void GetHistoricalData(GooContract c)
         {
             // Historical data is retrieved using a state machine
-            FSM_EventArgs e = new FSM_EventArgs(c);
+            var e = new FSM_EventArgs.GooContract_With_Payload(c);
             c.FSM.DownloadHistoricalData.Start(e);
         }
         #endregion

@@ -1,30 +1,8 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 using Appccelerate.StateMachine;
 
 namespace IBSampleApp
 {
-    // Basic interface/methods of any finite state machines
-    public interface IFiniteStateMachine
-    {
-        // Return enum type for all allowed states
-        Type GetStates();
-
-        // Return enum type for all allowed events
-        Type GetEvents();
-
-        // Return all defined state transitions for the FSM
-        StateTransition[] GetTransitions();
-
-        // Fire an event for the state machine
-        void FireEvent(System.Enum newEvent);
-
-        // Required entry and exit state methods.
-        void Initialize();
-        void Terminate();
-    }
-
     // Finite state machine class
     public class FiniteStateMachine
     {
@@ -62,15 +40,17 @@ namespace IBSampleApp
             throw new NotImplementedException();
         }
 
-        // Return typeof(YourMainObject).
-        protected virtual Type GetHostType()
+        // NOTE: A state object is a common object instance that can be accessed by the fsm state methods.
+        // These are not necessary, but can provide flexibility if the states need to access something during operation.
+        // Return typeof(<YourStateObjectClass>).
+        protected virtual Type GetStateObjectType()
         {
             // This is the object type of whatever is using the FSM.
             throw new NotImplementedException();
         }
 
         // Return instance of the FSM host object for use by the FSM states.
-        protected Object GetHostInstance()
+        protected Object GetStateObjectInstance()
         {
             return _fsmObject;
         }
@@ -82,10 +62,10 @@ namespace IBSampleApp
         }
 
         // Return an action method signature used by all state methods.
-        protected virtual Type GetActionSignature()
+        protected virtual Type GetStateMethodSignature()
         {
-            // Default Action has no parameters.
-            return typeof(Action<>);
+            // Default Action has no parameters. Override in your FSM to allow parameters to be passed to states via FireEvent
+            return typeof(Action);
         }
 
         // Allows user to manually assign the Appccelerate ".Execute", ".ExecuteOnEntry", and ".ExecuteOnExit" transition actions.
@@ -125,9 +105,9 @@ namespace IBSampleApp
         /// <param name="eventArg">argument to pass (default=null)</param>
         public void Start(object eventArg=null)
         {
-            // Start the FSM. This will call the "Initialized" state
+            // Start the FSM. This will call the "Initialize" state, which is the first state in every FSM.
             _fsm.Start();
-            // Initial transition from Entry to first state
+            // Transition from Initialize to first state
             _fsm.Fire(_initalizedEventName, eventArg);
         }
         #endregion
@@ -135,10 +115,10 @@ namespace IBSampleApp
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="fsmObj">The object instance which uses this FSM. If not data stored, can be null</param>
-        /// <param name="startFSM">true=>FSM starts immediately upon construction</param>
+        /// <param name="fsmObj">The object instance which uses this FSM. Can be accessed by GetStateObjectInstance(). Can be null</param>
+        /// <param name="startFSM">false=>FSM must be manually stated with Start(). Usually only needed if you don't have required parameters right away.</param>
         /// <param name="assignActionsManually">false</param>
-        public FiniteStateMachine(object fsmObj, bool startFSM=true, bool assignActionsManually=false)
+        public FiniteStateMachine(object fsmObj=null, bool startFSM=false, bool assignActionsManually=false)
         {
             // Save instance of object that is using the FSM so it can be accessed later by the FSM.
             _fsmObject = fsmObj;
@@ -170,7 +150,9 @@ namespace IBSampleApp
                         //var methodAction = (Action<GooContract>)Delegate.CreateDelegate(typeof(Action<GooContract>), this, stateName);
                         // dynamic allows us to cast without run-time static checking. Line above was previous implementation.
                         // This allows user to provide an Action method signature.
-                        dynamic methodAction = Delegate.CreateDelegate(this.GetActionSignature(), this, stateName);
+                        Type t = this.GetStateMethodSignature();
+                        dynamic methodAction = Delegate.CreateDelegate(t, this, stateName);
+                        
                         _fsm.In(stateName).ExecuteOnEntry(methodAction);
                     }
                 }
@@ -191,9 +173,36 @@ namespace IBSampleApp
             // Default to begin operation of the FSM.
             if(startFSM == true)
             {
-                _fsm.Start();
+                Start();
             }
+
+            // Add some handlers so we can track states/transitions while debugging
+            _fsm.TransitionCompleted += _fsm_TransitionCompleted;
+            _fsm.TransitionDeclined += _fsm_TransitionDeclined;
+            _fsm.TransitionExceptionThrown += _fsm_TransitionExceptionThrown;
         }
+
+        #region Debug Stuff
+        private void _fsm_TransitionExceptionThrown(object sender, Appccelerate.StateMachine.Machine.Events.TransitionExceptionEventArgs<string, string> e)
+        {
+            // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
+            throw new NotImplementedException();
+        }
+
+        private void _fsm_TransitionDeclined(object sender, Appccelerate.StateMachine.Machine.Events.TransitionEventArgs<string, string> e)
+        {
+            // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
+            throw new NotImplementedException();
+        }
+
+        private Appccelerate.StateMachine.Machine.Events.TransitionCompletedEventArgs<string, string> _debugLastTransition;
+        private void _fsm_TransitionCompleted(object sender, Appccelerate.StateMachine.Machine.Events.TransitionCompletedEventArgs<string, string> e)
+        {
+            // make a copy of the latest transition so we can debug.
+            // TODO: Transition logger
+            _debugLastTransition = e;
+        }
+        #endregion
 
         // contains some reflection code we may want to use later. Ignore it for now
         private void Initialize2()
