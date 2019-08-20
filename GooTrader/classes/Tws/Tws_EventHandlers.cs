@@ -183,7 +183,7 @@ namespace IBSampleApp
         // TWS connection closed
         private static void Ibclient_ConnectionClosed()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
         #endregion Miscellaneous
     }
