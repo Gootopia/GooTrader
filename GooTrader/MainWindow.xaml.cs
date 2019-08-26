@@ -1,13 +1,6 @@
-﻿using IBApi;
-using System;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System;
 using System.Windows;
 using System.Windows.Threading;
-
 
 // Use default namespace so we don't have to rename stuff when updating to a new TWS API
 namespace IBSampleApp
@@ -19,6 +12,7 @@ namespace IBSampleApp
     {
         // Instance of the model
         public Model m = new Model();
+        
         // Need an instance of the view model so we can bind to UI
         public ViewModel vm = new ViewModel();
 
@@ -42,6 +36,7 @@ namespace IBSampleApp
 
             // Start the TWS connectivity state machine.
             TWS.FSM.Connection.Start();
+            MessageLogger.LogMessage("Starting connection state machine.");
         }
 
         // 1 second tick timer for updating clock

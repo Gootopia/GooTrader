@@ -146,12 +146,12 @@
     <Compile Include="backend\messages\UpdatePortfolioMessage.cs" />
     <Compile Include="classes\Converters\Converters.cs" />
     <Compile Include="classes\GooContract.cs" />
-    <Compile Include="classes\MessageLogger.cs" />
+    <Compile Include="classes\Logging\MessageLogger.cs" />
     <Compile Include="AppccelerateSourceTemplates\Log4Net\Ensure.cs" />
-    <Compile Include="classes\Misc\logHelper.cs" />
+    <Compile Include="classes\Logging\logHelper.cs" />
     <Compile Include="classes\MVVM\Model.cs" />
     <Compile Include="classes\OHLCData.cs" />
-    <Compile Include="classes\PropertyUpdater.cs" />
+    <Compile Include="classes\Misc\PropertyUpdater.cs" />
     <Compile Include="classes\State Machines\FiniteStateMachine.cs" />
     <Compile Include="classes\State Machines\FSM_DownloadHistoricalData.cs" />
     <Compile Include="classes\State Machines\FSM_EventArgs.cs" />
@@ -160,7 +160,7 @@
     <Compile Include="classes\Tws\TwsInfo.cs" />
     <Compile Include="classes\Tws\Tws_EventHandlers.cs" />
     <Compile Include="classes\Tws\TWS_Wrappers.cs" />
-    <Compile Include="classes\UIThread.cs" />
+    <Compile Include="classes\Logging\UIThread.cs" />
     <Compile Include="classes\MVVM\ViewModel.cs" />
     <Compile Include="classes\MVVM\ViewModelCode.cs" />
     <Compile Include="MainWindow.xaml.cs">

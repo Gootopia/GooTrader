@@ -9,13 +9,9 @@ namespace IBSampleApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static readonly log4net.ILog log = LogHelper.GetLogger();
-
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-            Console.WriteLine("Hellow World!");
-            log.Error("We have a problem...");
-            //TWS.FSM.Connection.FireEvent(FSM_TwsConnectivity.Events.Connect);
+            TWS.FSM.Connection.FireEvent(FSM_TwsConnectivity.Events.Connect);
         }
 
         GooContract sp500, nq100;

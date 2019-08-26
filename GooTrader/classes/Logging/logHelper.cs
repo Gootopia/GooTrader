@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace GooTrader
+namespace IBSampleApp
 {
     public class LogHelper
     {

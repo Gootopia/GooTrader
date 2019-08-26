@@ -134,6 +134,7 @@ namespace IBSampleApp
 
             logErrorMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), logErrorMsg);
 
+            // Exceptions logged
             MessageLogger.LogMessage(logErrorMsg);
             #endregion TWS Error Logging
 

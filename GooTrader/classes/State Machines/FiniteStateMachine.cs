@@ -184,7 +184,7 @@ namespace IBSampleApp
             _fsm.TransitionExceptionThrown += _fsm_TransitionExceptionThrown;
 
             // Implement a logging extension. TState & TEvent are both strings to make this work
-            _fsm.AddExtension(new StateMachineLogExtension<string, string>());
+            //_fsm.AddExtension(new StateMachineLogExtension<string, string>());
         }
 
         #region Debug Stuff
