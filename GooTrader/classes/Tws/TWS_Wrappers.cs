@@ -43,7 +43,7 @@ namespace IBSampleApp
             ibclient.ClientSocket.Close();
             bool status = ConnectionStatusChanged();
 
-            MessageLogger.LogMessage("Disconnected");
+            MessageLogger.LogMessage("TWS-Disconnected");
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace IBSampleApp
             
             // Always sync server time after connection. We'll do this behind the scenes unlike most TWS events as it just clutters the state machine
             ibclient.ClientSocket.reqCurrentTime();
-            MessageLogger.LogMessage("Requesting TWS Time");
+            MessageLogger.LogMessage("TWS-Requesting server time");
         }
 
         /// <summary>

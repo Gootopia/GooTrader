@@ -47,6 +47,9 @@
     <Reference Include="LiveCharts.Wpf, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -75,6 +78,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AppccelerateSourceTemplates\Log4Net\StateMachineLogExtension.cs" />
     <Compile Include="backend\IBClient.cs" />
     <Compile Include="backend\messages\AccountDownloadEndMessage.cs" />
     <Compile Include="backend\messages\AccountSummaryEndMessage.cs" />
@@ -142,10 +146,12 @@
     <Compile Include="backend\messages\UpdatePortfolioMessage.cs" />
     <Compile Include="classes\Converters\Converters.cs" />
     <Compile Include="classes\GooContract.cs" />
-    <Compile Include="classes\MessageLogger.cs" />
+    <Compile Include="classes\Logging\MessageLogger.cs" />
+    <Compile Include="AppccelerateSourceTemplates\Log4Net\Ensure.cs" />
+    <Compile Include="classes\Logging\logHelper.cs" />
     <Compile Include="classes\MVVM\Model.cs" />
     <Compile Include="classes\OHLCData.cs" />
-    <Compile Include="classes\PropertyUpdater.cs" />
+    <Compile Include="classes\Misc\PropertyUpdater.cs" />
     <Compile Include="classes\State Machines\FiniteStateMachine.cs" />
     <Compile Include="classes\State Machines\FSM_DownloadHistoricalData.cs" />
     <Compile Include="classes\State Machines\FSM_EventArgs.cs" />
@@ -154,7 +160,7 @@
     <Compile Include="classes\Tws\TwsInfo.cs" />
     <Compile Include="classes\Tws\Tws_EventHandlers.cs" />
     <Compile Include="classes\Tws\TWS_Wrappers.cs" />
-    <Compile Include="classes\UIThread.cs" />
+    <Compile Include="classes\Logging\UIThread.cs" />
     <Compile Include="classes\MVVM\ViewModel.cs" />
     <Compile Include="classes\MVVM\ViewModelCode.cs" />
     <Compile Include="MainWindow.xaml.cs">

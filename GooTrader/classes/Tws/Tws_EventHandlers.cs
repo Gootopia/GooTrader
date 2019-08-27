@@ -134,6 +134,7 @@ namespace IBSampleApp
 
             logErrorMsg = String.Format("ID={0},Error={1}:{2}", id.ToString(), errorCode.ToString(), logErrorMsg);
 
+            // Exceptions logged
             MessageLogger.LogMessage(logErrorMsg);
             #endregion TWS Error Logging
 
@@ -183,7 +184,7 @@ namespace IBSampleApp
         // TWS connection closed
         private static void Ibclient_ConnectionClosed()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
         #endregion Miscellaneous
     }

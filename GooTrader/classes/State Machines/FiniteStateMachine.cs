@@ -1,5 +1,7 @@
 ﻿using System;
 using Appccelerate.StateMachine;
+using Appccelerate.StateMachine.Extensions;
+using Appccelerate.SourceTemplates.Log4Net;
 
 namespace IBSampleApp
 {
@@ -180,6 +182,9 @@ namespace IBSampleApp
             _fsm.TransitionCompleted += _fsm_TransitionCompleted;
             _fsm.TransitionDeclined += _fsm_TransitionDeclined;
             _fsm.TransitionExceptionThrown += _fsm_TransitionExceptionThrown;
+
+            // Implement a logging extension. TState & TEvent are both strings to make this work
+            //_fsm.AddExtension(new StateMachineLogExtension<string, string>());
         }
 
         #region Debug Stuff
@@ -250,7 +255,6 @@ namespace IBSampleApp
         public System.Enum InState;
         public System.Enum OnEvent;
         public System.Enum GotoState;
-
         public StateTransition(System.Enum instate, System.Enum onevent, System.Enum gotostate)
         {
             InState = instate;
