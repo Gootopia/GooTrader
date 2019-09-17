@@ -14,3 +14,7 @@ GooTrader/obj/
 \.vs/GooTrader/v16/Server/sqlite3/storage\.ide
 
 \.vs/GooTrader/v16/\.suo
+
+.vs/GooTrader/v16/Server/sqlite3/storage.ide-wal
+
+.vs/GooTrader/v16/Server/sqlite3/
