@@ -15,7 +15,7 @@ namespace IBSampleApp
 
         public TWSFiniteStateMachines(GooContract c)
         {
-            // state machines need the FSM host so it can be accessed during execution of the FSM.
+            // state machines need the contract so it can be accessed during execution of the FSM.
             DownloadHistoricalData = new FSM_DownloadHistoricalData(c);
         }
     }

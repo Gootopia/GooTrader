@@ -7,9 +7,7 @@ namespace IBSampleApp
     // Downloads historical price data from broker platform
     // See FSM_DownloadHistoricalData in draw.io editor
     public class FSM_DownloadHistoricalData : FiniteStateMachine
-    {
-        public FSM_DownloadHistoricalData(GooContract c) : base(c) { }
-        
+    {       
         // These define the state and event names and the transitions
         #region FSM Definition
         // All valid states
@@ -36,8 +34,8 @@ namespace IBSampleApp
             Finished
         }
 
-        // Valid state transitions
-        protected StateTransition[] Transitions = new StateTransition[]
+        // Valid state transitions. Must be static so we can pass to the constructor 
+        static StateTransition[] Transitions = new StateTransition[]
         {
             new StateTransition(States.Initialize, Events.Initialized, States.GetHeadTimeStamp),
             new StateTransition(States.GetHeadTimeStamp, Events.HeadTimeStamp, States.TimeStampReceived),
@@ -50,35 +48,9 @@ namespace IBSampleApp
         };
         #endregion
 
-        // The methods are needed to initialize the FSM.
-        #region FSM Initialization
-        protected override Type GetStates()
-        {
-            return typeof(States);
-        }
-
-        public override Type GetEvents()
-        {
-            return typeof(Events);
-        }
-
-        protected override Type GetStateObjectType()
-        {
-            // This is the host object type of whatever is using the FSM.
-            return typeof(GooContract);
-        }
-
-        protected override StateTransition[] GetTransitions()
-        {
-            return Transitions;
-        }
-
-        protected override Type GetStateMethodSignature()
-        {
-            // All types will use this signature
-            return typeof(Action<FSM_EventArgs.GooContract_With_Payload>);
-        }
-        #endregion
+        // Constructor
+        public FSM_DownloadHistoricalData(GooContract c) :
+            base(typeof(States), typeof(Events), Transitions, typeof(Action<FSM_EventArgs.GooContract_With_Payload>), c) { }
 
         // Methods for individual states. Should be private or protected to hide them since they don't need to be called directly.
         // NOTE: NAMES NEED TO MATCH STATES EXACTLY OR EXCEPTIONS WILL BE GENERATED!
@@ -137,6 +109,7 @@ namespace IBSampleApp
                 FireEvent(FSM_DownloadHistoricalData.Events.Finished);
             }
         }
+
         #endregion
     }
 }

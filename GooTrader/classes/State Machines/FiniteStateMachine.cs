@@ -6,8 +6,8 @@ using Appccelerate.SourceTemplates.Log4Net;
 namespace IBSampleApp
 {
     // Finite state machine class
-    public class FiniteStateMachine
-    {
+    public abstract class FiniteStateMachine
+    {      
         // Internal state machine. See Appccelerate docs for other types
         private ActiveStateMachine<string, string> _fsm = new ActiveStateMachine<string, string>();
         
@@ -18,11 +18,14 @@ namespace IBSampleApp
         // used to make the initial state transition from entry state
         private static string _initalizedEventName = "Initialized";
 
-        // object which is using the FSM. Can store custom data
-        private Object _fsmObject;
+        // object which is using the FSM. Can store custom data for the state machine
+        private Object _fsmData;
+
+        // Only events of this type may be "fired". Used for sanity checking so we can't b
+        private Type _requiredEventType;
 
         // Required state methods. Normally they do nothing, but they can be overridden.
-        #region State Methods
+        #region State Book-keeping Methods
         protected virtual void Initialize() { }
 
         protected virtual void Terminate() { }
@@ -30,51 +33,12 @@ namespace IBSampleApp
 
         // These are "placeholder" functions that user MUST override and return the appropriate type for a specific state machine!
         #region "PlaceHolder" Methods
-        // Return typeof(YourEventsEnum)
-        public virtual Type GetEvents()
-        {
-            throw new NotImplementedException();
-        }
-
-        // Return typeof(YourStatesEnum)
-        protected virtual Type GetStates()
-        {
-            throw new NotImplementedException();
-        }
-
-        // NOTE: A state object is a common object instance that can be accessed by the fsm state methods.
-        // These are not necessary, but can provide flexibility if the states need to access something during operation.
-        // Return typeof(<YourStateObjectClass>).
-        protected virtual Type GetStateObjectType()
-        {
-            // This is the object type of whatever is using the FSM.
-            throw new NotImplementedException();
-        }
-
-        // Return instance of the FSM host object for use by the FSM states.
-        protected Object GetStateObjectInstance()
-        {
-            return _fsmObject;
-        }
-
-        // Return array of your StateTransitions
-        protected virtual StateTransition[] GetTransitions()
-        {
-            throw new NotImplementedException();
-        }
-
-        // Return an action method signature used by all state methods.
-        protected virtual Type GetStateMethodSignature()
-        {
-            // Default Action has no parameters. Override in your FSM to allow parameters to be passed to states via FireEvent
-            return typeof(Action);
-        }
 
         // Allows user to manually assign the Appccelerate ".Execute", ".ExecuteOnEntry", and ".ExecuteOnExit" transition actions.
         // Must pass "true" in the constructor for this to get called!
         protected virtual void AssignStateActions()
         {
-            // TODO: GOOT-15 We'll implement this later if we need it. If we get the exception, then we know we need it!
+            // TODO: We'll implement this later if we need it. If we get the exception, then we know we need it!
             throw new NotImplementedException();
         }
         #endregion
@@ -87,17 +51,16 @@ namespace IBSampleApp
         /// <param name="eventArg">argument to pass (default=null)</param>
         public void FireEvent(Enum newEvent, object eventArg=null)
         {
-            Type enumType = this.GetEvents();
             Type eventType = newEvent.GetType();
 
             // Make sure event passed was of the same enum type. We're not checking that we passed the right event for the situation,
-            // just making sure we didn't send in the wrong type by accident.
-            if(eventType == enumType)
+            // just making sure we didn't send in the wrong enum by accident.
+            if(eventType == _requiredEventType)
             {
                 _fsm.Fire(newEvent.ToString(), eventArg);
             } else
             {
-                throw new NotSupportedException("Invalid Enum Type");
+                throw new NotSupportedException("Event is incompatible with this state machine.");
             }
         }
 
@@ -117,17 +80,22 @@ namespace IBSampleApp
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="fsmObj">The object instance which uses this FSM. Can be accessed by GetStateObjectInstance(). Can be null</param>
-        /// <param name="startFSM">false=>FSM must be manually stated with Start(). Usually only needed if you don't have required parameters right away.</param>
-        /// <param name="assignActionsManually">false</param>
-        public FiniteStateMachine(object fsmObj=null, bool startFSM=false, bool assignActionsManually=false)
+        /// <param name="states">Enum of states.</param>
+        /// <param name="events">Enum of events.</param>
+        /// <param name="transitions">Array of StateTransitions.</param>
+        /// <param name="methodSignature">[OPTIONAL]Action signature (Action<type1, type2,...>) Default is method with no parameters</type1></param>
+        /// <param name="fsmObj">[OPTIONAL]The object instance which uses this FSM. Can be null</param>
+        /// <param name="startFSM">[OPTIONAL]false=>FSM must be manually stated with Start(). Usually only needed if you don't have required parameters right away.</param>
+        /// <param name="assignActionsManually">[OPTIONAL]false</param>
+        public FiniteStateMachine(Type states, Type events, StateTransition[] transitions, 
+                                    Type methodSignature=null, object fsmObj=null, bool startFSM=false, bool assignActionsManually=false)
         {
             // Save instance of object that is using the FSM so it can be accessed later by the FSM.
-            _fsmObject = fsmObj;
-            
-            Type states = this.GetStates();
-            Type events = this.GetEvents();
-            StateTransition[] transitions = this.GetTransitions();
+            _fsmData = fsmObj;
+
+            // Set the type of events that this state machine can respond to.
+            _requiredEventType = events;
+
             var stateNames = Enum.GetNames(states);
 
             // Build all allowed transitions.
@@ -147,12 +115,11 @@ namespace IBSampleApp
                     // All states except initialization and termination states have signatures. Those get done below
                     if (!stateName.Equals(_initializeStateName) && !stateName.Equals(_terminateStateName))
                     {
-                        // TODO: Future use could add "Entry" and "Exit" to method signatures to allow more flexible execution
+                        // User can provide for more complex method signatures. Default is 'Action' (i.e: method with no parameters)
+                        Type t = methodSignature ?? typeof(Action);
 
-                        //var methodAction = (Action<GooContract>)Delegate.CreateDelegate(typeof(Action<GooContract>), this, stateName);
+                        // var methodAction = (Action<GooContract>)Delegate.CreateDelegate(typeof(Action<GooContract>), this, stateName);
                         // dynamic allows us to cast without run-time static checking. Line above was previous implementation.
-                        // This allows user to provide an Action method signature.
-                        Type t = this.GetStateMethodSignature();
                         dynamic methodAction = Delegate.CreateDelegate(t, this, stateName);
                         
                         _fsm.In(stateName).ExecuteOnEntry(methodAction);
@@ -193,7 +160,6 @@ namespace IBSampleApp
             // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
             throw new NotImplementedException();
         }
-
         private void _fsm_TransitionDeclined(object sender, Appccelerate.StateMachine.Machine.Events.TransitionEventArgs<string, string> e)
         {
             // TODO: Not sure how we get here, but it could be important so leave exception to flag it for now so we can investigate later.
@@ -210,9 +176,9 @@ namespace IBSampleApp
         #endregion
 
         // contains some reflection code we may want to use later. Ignore it for now
-        private void Initialize2()
-        {
-            #region Old Example Code
+        #region Old Example Code
+        //private void Initialize2()
+        //{
             //Type classtype = this.GetType();
             //MethodInfo[] classmethods = Type.GetType(this.ToString()).GetMethods(BindingFlags.Public | BindingFlags.Instance);
             //MemberInfo[] classmembers = classtype.GetMembers();
@@ -243,8 +209,8 @@ namespace IBSampleApp
             //    }
             //    Action methodAction = (Action)Delegate.CreateDelegate(typeof(Action), this, stateName);
             //}
-            #endregion
-        }
+        //}
+        #endregion
     }
 
     /// <summary>

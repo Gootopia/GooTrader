@@ -1,0 +1,16 @@
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.abstractions.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.runner.visualstudio.testadapter.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.runner.reporters.net452.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.runner.utility.net452.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xUnitTest.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xUnitTest.pdb
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.assert.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.core.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.execution.desktop.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.assert.xml
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.core.xml
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\bin\Debug\xunit.execution.desktop.xml
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\obj\Debug\xUnitTest.csproj.CopyComplete
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\obj\Debug\xUnitTest.dll
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\obj\Debug\xUnitTest.pdb
+C:\Users\Gootopia\Desktop\GITHUB\GooTrader\xUnitTest\obj\Debug\xUnitTest.csprojAssemblyReference.cache
