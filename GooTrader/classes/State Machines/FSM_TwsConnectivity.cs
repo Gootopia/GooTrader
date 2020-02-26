@@ -12,7 +12,8 @@ namespace IBSampleApp
         /// <summary>
         /// See FiniteStateMachine constructor for parameters.
         /// </summary>
-        public FSM_TwsConnectivity() : base(null, false, false) { }
+        public FSM_TwsConnectivity() :
+            base(typeof(States), typeof(Events), Transitions, typeof(Action<FSM_EventArgs.Payload_Only>)) { }
 
         // These define the state and event names and the transitions
         #region FSM Definition
@@ -42,7 +43,7 @@ namespace IBSampleApp
         }
 
         // Valid state transitions
-        protected StateTransition[] Transitions = new StateTransition[]
+        static protected StateTransition[] Transitions = new StateTransition[]
         {
             new StateTransition(States.Initialize, Events.Initialized, States.NotConnected),
             new StateTransition(States.NotConnected,Events.TwsRunning, States.ReadyToConnect),
@@ -53,42 +54,6 @@ namespace IBSampleApp
             new StateTransition(States.Connected, Events.TWS_Error_507, States.FailedConnection),
             new StateTransition(States.Connected, Events.TWS_Error_0, States.FailedConnection)
         };
-        #endregion
-
-        // The methods are needed to initialize the FSM.
-        // NOTE: You don't need to do anything with these
-        #region FSM Initialization
-        #region NO_MODIFY
-        protected override Type GetStates()
-        {
-            return typeof(States);
-        }
-
-        public override Type GetEvents()
-        {
-            return typeof(Events);
-        }
-
-        protected override StateTransition[] GetTransitions()
-        {
-            return Transitions;
-        }
-        #endregion NO_MODIFY
-
-        #region MODIFY
-        protected override Type GetStateObjectType()
-        {
-            // This is the host object type of whatever is using the FSM.
-            throw new NotImplementedException();
-        }
-
-        protected override Type GetStateMethodSignature()
-        {
-            // All types will use this signature, which defaults to no parameters and no return.
-            //return base.GetStateMethodSignature();
-            return typeof(Action<FSM_EventArgs.Payload_Only>);
-        }
-        #endregion MODIFY
         #endregion
 
         // Methods for individual states. Should be private or protected to hide them since they don't need to be called directly.
