@@ -1,5 +1,8 @@
 GooTrader
+A c# based IB front end for algorithmic trading.
 
-===== 10/26/18 =====
-Some weird issues with merging. Deleted and then re-added develop. Not sure what I was doing in the first place.
-This is now the new develop.
+NOTES:
+- You can view the state machine diagrams using drawIo (using either online or desktop versions).
+
+
+

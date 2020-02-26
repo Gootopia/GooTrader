@@ -20,3 +20,7 @@ GooTrader/obj/
 .vs/GooTrader/v16/Server/sqlite3/
 
 .vs/GooTrader/v16/
+
+xUnitTest/bin/
+
+xUnitTest/obj/
